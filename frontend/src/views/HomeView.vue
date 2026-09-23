@@ -1,7 +1,19 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import ShinyCard from '../components/ShinyCard.vue'
-import { shinies } from '../data/shinies'
+
+const shinies = ref([])
+
+async function loadShinies() {
+  const response = await fetch('http://localhost:5119/api/shinies')
+  const data = await response.json()
+
+  shinies.value = data
+}
+
+onMounted(() => {
+  loadShinies()
+})
 
 const search = ref('')
 
