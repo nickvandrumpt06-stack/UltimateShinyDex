@@ -12,5 +12,6 @@ namespace UltimateShinyDex.Api.Models
         public int? Encounters { get; set; }
         public bool IsAlpha { get; set; }
         public string? Mark { get; set; }
+        public string? Gender { get; set; }
     }
 }

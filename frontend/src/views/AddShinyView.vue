@@ -14,6 +14,7 @@ const method = ref('')
 const encounters = ref('')
 const isAlpha = ref(false)
 const mark = ref('')
+const gender = ref('')
 
 async function addShiny() {
   const newShiny = {

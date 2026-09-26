@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Nick van Drumpt\\source\\repos\\UltimateShinyDex\\backend\\UltimateShinyDex.Api.csproj": {}
+    "C:\\Users\\nickv\\source\\repos\\UltimateShinyDex\\backend\\UltimateShinyDex.Api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Nick van Drumpt\\source\\repos\\UltimateShinyDex\\backend\\UltimateShinyDex.Api.csproj": {
+    "C:\\Users\\nickv\\source\\repos\\UltimateShinyDex\\backend\\UltimateShinyDex.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Nick van Drumpt\\source\\repos\\UltimateShinyDex\\backend\\UltimateShinyDex.Api.csproj",
+        "projectUniqueName": "C:\\Users\\nickv\\source\\repos\\UltimateShinyDex\\backend\\UltimateShinyDex.Api.csproj",
         "projectName": "UltimateShinyDex.Api",
-        "projectPath": "C:\\Users\\Nick van Drumpt\\source\\repos\\UltimateShinyDex\\backend\\UltimateShinyDex.Api.csproj",
-        "packagesPath": "C:\\Users\\Nick van Drumpt\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Nick van Drumpt\\source\\repos\\UltimateShinyDex\\backend\\obj\\",
+        "projectPath": "C:\\Users\\nickv\\source\\repos\\UltimateShinyDex\\backend\\UltimateShinyDex.Api.csproj",
+        "packagesPath": "C:\\Users\\nickv\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\nickv\\source\\repos\\UltimateShinyDex\\backend\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\Nick van Drumpt\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\nickv\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -86,7 +86,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.401/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.400/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

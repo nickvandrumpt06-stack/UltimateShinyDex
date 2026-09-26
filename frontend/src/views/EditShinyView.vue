@@ -13,6 +13,9 @@ const game = ref('')
 const ball = ref('')
 const method = ref('')
 const encounters = ref('')
+const isAlpha = ref(false)
+const mark = ref('')
+const gender = ref('')
 
 async function loadShiny() {
   const response = await fetch(
@@ -30,6 +33,7 @@ async function loadShiny() {
   encounters.value = shiny.encounters?.toString()
   isAlpha.value = shiny.isAlpha
   mark.value = shiny.mark
+  gender.value = shiny.gender ?? ''
 }
 
 async function updateShiny() {
@@ -166,6 +170,17 @@ onMounted(() => {
           type="text"
         />
       </div>
+
+      <div>
+  <label for="gender">Gender:</label>
+
+  <select id="gender" v-model="gender">
+    <option value="">Unknown / Not applicable</option>
+    <option value="Male">Male</option>
+    <option value="Female">Female</option>
+    <option value="Genderless">Genderless</option>
+  </select>
+</div>
 
       <button type="submit">
         Save Changes

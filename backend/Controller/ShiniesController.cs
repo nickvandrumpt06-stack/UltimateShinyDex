@@ -69,6 +69,7 @@ public async Task<IActionResult> UpdateShiny(int id, Shiny updatedShiny)
     shiny.Encounters = updatedShiny.Encounters;
     shiny.IsAlpha = updatedShiny.IsAlpha;
     shiny.Mark = updatedShiny.Mark;
+    shiny.Gender = updatedShiny.Gender;
 
     await _context.SaveChangesAsync();
 
