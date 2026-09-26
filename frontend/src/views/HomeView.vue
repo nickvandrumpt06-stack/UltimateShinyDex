@@ -36,9 +36,10 @@ const filteredShinies = computed(() => {
     />
 
     <ShinyCard
-      v-for="shiny in filteredShinies"
-      :key="shiny.id"
-      :shiny="shiny"
-    />
+  v-for="shiny in filteredShinies"
+  :key="shiny.id"
+  :shiny="shiny"
+  @deleted="loadShinies"
+/>
   </main>
 </template>

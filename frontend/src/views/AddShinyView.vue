@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { shinies } from '../data/shinies'
 import { natures, games, balls } from '../data/options'
 
 const router = useRouter()
@@ -11,15 +10,30 @@ const nickname = ref('')
 const nature = ref('')
 const game = ref('')
 const ball = ref('')
+const method = ref('')
+const encounters = ref('')
+const isAlpha = ref(false)
+const mark = ref('')
 
-function addShiny() {
-  shinies.value.push({
-    id: shinies.value.length + 1,
+async function addShiny() {
+  const newShiny = {
     pokemon: pokemon.value,
     nickname: nickname.value,
     nature: nature.value,
     game: game.value,
-    ball: ball.value
+    ball: ball.value,
+    method: method.value,
+    encounters: encounters.value ? parseInt(encounters.value) : null,
+    isAlpha: isAlpha.value,
+    mark: mark.value
+  }
+
+  await fetch('http://localhost:5119/api/shinies', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(newShiny)
   })
 
   router.push('/')
@@ -114,6 +128,43 @@ function addShiny() {
             {{ ballOption }}
           </option>
         </select>
+      </div>
+
+      <div>
+        <label for="method">Method:</label>
+        <input
+          type="text"
+          id="method"
+          v-model="method"
+        />
+      </div>
+
+      <div>
+        <label for="encounters">Encounters:</label>
+        <input
+          type="number"
+          id="encounters"
+          v-model.number="encounters"
+          min="0"
+        />
+      </div>
+
+      <div>
+        <label for="isAlpha">Is Alpha:</label>
+        <input
+          type="checkbox"
+          id="isAlpha"
+          v-model="isAlpha"
+        />
+      </div>  
+
+      <div>
+        <label for="mark">Mark:</label>
+        <input
+          type="text"
+          id="mark"
+          v-model="mark"
+        />
       </div>
 
       <button type="submit">

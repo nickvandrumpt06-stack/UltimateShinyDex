@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import EditShinyView from '../views/EditShinyView.vue'
 
 import HomeView from '../views/HomeView.vue'
 import AddShinyView from '../views/AddShinyView.vue'
@@ -16,6 +17,11 @@ const router = createRouter({
       path: '/add',
       name: 'add-shiny',
       component: AddShinyView
+    },
+    {
+      path: '/edit/:id',
+      name: 'edit-shiny',
+      component: EditShinyView
     }
   ]
 })

@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using UltimateShinyDex.Api.Data;
 using UltimateShinyDex.Api.Models;
 
 namespace UltimateShinyDex.Api.Controllers
@@ -7,41 +9,83 @@ namespace UltimateShinyDex.Api.Controllers
     [Route("api/[controller]")]
     public class ShiniesController : ControllerBase
     {
-        private static readonly List<Shiny> Shinies = new()
+        private readonly ShinyDbContext _context;
+
+        public ShiniesController(ShinyDbContext context)
         {
-            new Shiny
-            {
-                Id = 1,
-                Pokemon = "Gogoat",
-                Nickname = "Dame",
-                Nature = "Careful",
-                Game = "Pokemon Legends Z-A",
-                Ball = "Friend Ball"
-            },
-            new Shiny
-            {
-                Id = 2,
-                Pokemon = "Silvally",
-                Nickname = "Riley",
-                Nature = "Hardy",
-                Game = "Pokemon Ultra Sun",
-                Ball = "Poke Ball"
-            },
-            new Shiny
-            {
-                Id = 3,
-                Pokemon = "Skeledirge",
-                Nickname = "Fragola",
-                Nature = "Bold",
-                Game = "Pokemon Violet",
-                Ball = "Love Ball"
-            }
-        };
+            _context = context;
+        }
 
         [HttpGet]
-        public ActionResult<List<Shiny>> GetAll()
+        public async Task<ActionResult<List<Shiny>>> GetAll()
         {
-            return Ok(Shinies);
+            var shinies = await _context.Shinies.ToListAsync();
+
+            return Ok(shinies);
         }
+
+        [HttpPost]
+        public async Task<ActionResult<Shiny>> AddShiny(Shiny shiny)
+        {
+            _context.Shinies.Add(shiny);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(shiny);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteShiny(int id)
+        {
+            var shiny = await _context.Shinies.FindAsync(id);
+
+            if (shiny == null)
+            {
+                return NotFound();
+            }
+
+            _context.Shinies.Remove(shiny);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpPut("{id}")]
+public async Task<IActionResult> UpdateShiny(int id, Shiny updatedShiny)
+{
+    var shiny = await _context.Shinies.FindAsync(id);
+
+    if (shiny == null)
+    {
+        return NotFound();
+    }
+
+    shiny.Pokemon = updatedShiny.Pokemon;
+    shiny.Nickname = updatedShiny.Nickname;
+    shiny.Nature = updatedShiny.Nature;
+    shiny.Game = updatedShiny.Game;
+    shiny.Ball = updatedShiny.Ball;
+    shiny.Method = updatedShiny.Method;
+    shiny.Encounters = updatedShiny.Encounters;
+    shiny.IsAlpha = updatedShiny.IsAlpha;
+    shiny.Mark = updatedShiny.Mark;
+
+    await _context.SaveChangesAsync();
+
+    return NoContent();
+}
+
+[HttpGet("{id}")]
+public async Task<ActionResult<Shiny>> GetById(int id)
+{
+    var shiny = await _context.Shinies.FindAsync(id);
+
+    if (shiny == null)
+    {
+        return NotFound();
+    }
+
+    return Ok(shiny);
+}
     }
 }
