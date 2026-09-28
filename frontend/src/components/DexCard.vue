@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import alphaSymbol from '../assets/alpha-symbol.png'
 import { ballSprites } from '../data/ballSprites'
 import { marks } from '../data/marks'
+import { RouterLink } from 'vue-router'
 
 const expanded = ref(false)
 
@@ -20,6 +21,10 @@ const currentShiny = computed(() => {
 })
 
 const spriteUrl = computed(() => {
+  if (currentShiny.value?.customSpritePath) {
+    return `http://localhost:5119${currentShiny.value.customSpritePath}`
+  }
+
   if (!props.entry.dexNumber) {
     return null
   }
@@ -31,13 +36,23 @@ const ballImageUrl = computed(() => {
   return ballSprites[currentShiny.value?.ball] ?? null
 })
 
-const markImageUrl = computed(() => {
-  const mark = marks.find(
-    (mark) => mark.name === currentShiny.value?.mark
-  )
+const currentMarkImages = computed(() => {
+  if (!currentShiny.value?.marks) {
+    return []
+  }
 
-  return mark?.image ?? null
+  return currentShiny.value.marks.map((shinyMark) => {
+    const markData = marks.find(
+      (mark) => mark.name === shinyMark.markName
+    )
+
+    return {
+      name: shinyMark.markName,
+      image: markData?.image ?? null
+    }
+  })
 })
+
 function previousShiny() {
   if (currentIndex.value > 0) {
     currentIndex.value--
@@ -69,6 +84,8 @@ function toggleExpanded() {
         :src="spriteUrl"
         :alt="`Shiny ${entry.name}`"
         class="pokemon-sprite"
+
+        
       />
 
       <span v-else>
@@ -115,12 +132,14 @@ function toggleExpanded() {
   />
 
   <img
-    v-if="markImageUrl"
-    :src="markImageUrl"
-    :alt="currentShiny.mark"
-    :title="currentShiny.mark"
-    class="mark-icon"
-  />
+  v-for="mark in currentMarkImages"
+  :key="mark.name"
+  v-show="mark.image"
+  :src="mark.image"
+  :alt="mark.name"
+  :title="mark.name"
+  class="mark-icon"
+/>
 </div>
 
       <div
@@ -157,15 +176,34 @@ function toggleExpanded() {
           Yes
         </p>
 
-        <p v-if="currentShiny.mark">
-          <strong>Mark:</strong>
-          {{ currentShiny.mark }}
-        </p>
+        <div
+  v-if="currentShiny.marks?.length"
+  class="mark-details"
+>
+  <strong>Marks:</strong>
+
+  <ul>
+    <li
+      v-for="mark in currentShiny.marks"
+      :key="mark.id"
+    >
+      {{ mark.markName }}
+    </li>
+  </ul>
+</div>
       </div>
 
       <p class="details-hint">
         {{ expanded ? 'Click to hide details' : 'Click to view details' }}
       </p>
+
+      <RouterLink
+  class="edit-link"
+  :to="`/edit/${currentShiny.id}`"
+  @click.stop
+>
+  Edit
+</RouterLink>
     </div>
 
     <div v-else class="missing">
@@ -320,5 +358,26 @@ function toggleExpanded() {
   width: 32px;
   height: 32px;
   object-fit: contain;
+}
+
+.mark-details ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+
+.edit-link {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #111827;
+  color: white;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.edit-link:hover {
+  opacity: 0.9;
 }
 </style>

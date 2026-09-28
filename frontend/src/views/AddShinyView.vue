@@ -15,7 +15,7 @@ const ball = ref('')
 const method = ref('')
 const encounters = ref('')
 const isAlpha = ref(false)
-const mark = ref('')
+const selectedMarks = ref([])
 const gender = ref('')
 const form = ref('')
 
@@ -42,7 +42,9 @@ async function addShiny() {
     method: method.value,
     encounters: encounters.value ? parseInt(encounters.value) : null,
     isAlpha: isAlpha.value,
-    mark: mark.value,
+    marks: selectedMarks.value.map((markName) => ({
+  markName: markName
+})),
     gender: gender.value,
     form: form.value
   }
@@ -173,25 +175,32 @@ async function addShiny() {
           />
         </div>
 
-        <div class="form-group">
-  <label for="mark">Mark</label>
+        <div class="form-group marks-group">
+  <label>Marks</label>
 
-  <select
-    id="mark"
-    v-model="mark"
-  >
-    <option value="">
-      No Mark
-    </option>
-
-    <option
+  <div class="marks-list">
+    <label
       v-for="markOption in marks"
       :key="markOption.name"
-      :value="markOption.name"
+      class="mark-option"
     >
-      {{ markOption.name }}
-    </option>
-  </select>
+      <input
+        type="checkbox"
+        :value="markOption.name"
+        v-model="selectedMarks"
+      />
+
+      <img
+        :src="markOption.image"
+        :alt="markOption.name"
+        class="mark-option-icon"
+      />
+
+      <span>
+        {{ markOption.name }}
+      </span>
+    </label>
+  </div>
 </div>
 
         <div class="form-group">
@@ -365,6 +374,52 @@ async function addShiny() {
 
   .form-card {
     padding: 24px;
+  }
+}
+
+.marks-group {
+  grid-column: 1 / -1;
+}
+
+.marks-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.mark-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: white;
+}
+
+.mark-option:hover {
+  background: #f3f4f6;
+}
+
+.mark-option input {
+  width: auto;
+}
+
+.mark-option-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+@media (max-width: 700px) {
+  .marks-list {
+    grid-template-columns: 1fr;
   }
 }
 </style>
