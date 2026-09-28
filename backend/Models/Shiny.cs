@@ -13,5 +13,6 @@ namespace UltimateShinyDex.Api.Models
         public bool IsAlpha { get; set; }
         public string? Mark { get; set; }
         public string? Gender { get; set; }
+        public string? Form { get; set; }
     }
 }

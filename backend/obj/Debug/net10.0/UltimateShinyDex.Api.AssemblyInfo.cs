@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UltimateShinyDex.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a785151f7d1d6b85ca5a47c89cd51af4dfbaf074")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0a2fc97a19880317ba49e088ec30b84b7e51b6ca")]
 [assembly: System.Reflection.AssemblyProductAttribute("UltimateShinyDex.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UltimateShinyDex.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

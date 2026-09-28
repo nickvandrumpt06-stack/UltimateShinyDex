@@ -36,6 +36,9 @@ namespace UltimateShinyDex.Api.Migrations
                     b.Property<int?>("Encounters")
                         .HasColumnType("int");
 
+                    b.Property<string>("Form")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Game")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");

@@ -182,6 +182,15 @@ onMounted(() => {
   </select>
 </div>
 
+      <div>
+        <label for="form">Form:</label>
+        <input
+          id="form"
+          v-model="form"
+          type="text"
+        />
+      </div>
+
       <button type="submit">
         Save Changes
       </button>

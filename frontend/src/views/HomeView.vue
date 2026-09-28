@@ -1,17 +1,12 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import ShinyCard from '../components/ShinyCard.vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { pokemonDex } from '../data/pokedex'
 import DexCard from '../components/DexCard.vue'
 
 const shinies = ref([])
 const search = ref('')
-
-const filteredDexEntries = computed(() => {
-  return dexEntries.value.filter((entry) =>
-    entry.name.toLowerCase().includes(search.value.toLowerCase())
-  )
-})
+const currentPage = ref(1)
+const itemsPerPage = 60
 
 async function loadShinies() {
   const response = await fetch('http://localhost:5119/api/shinies')
@@ -22,6 +17,52 @@ async function loadShinies() {
 
 onMounted(() => {
   loadShinies()
+})
+
+const dexEntries = computed(() => {
+  return pokemonDex.map((pokemon) => {
+    const ownedShinies = shinies.value.filter((shiny) => {
+      const samePokemon =
+        shiny.pokemon.toLowerCase() === pokemon.name.toLowerCase()
+
+      if (!samePokemon) {
+        return false
+      }
+
+      const sameGender =
+        !pokemon.gender || shiny.gender === pokemon.gender
+
+      const sameForm =
+        !pokemon.form
+          ? !shiny.form
+          : shiny.form === pokemon.form
+
+      return sameGender && sameForm
+    })
+
+    return {
+      ...pokemon,
+      obtained: ownedShinies.length > 0,
+      shinies: ownedShinies
+    }
+  })
+})
+
+const filteredDexEntries = computed(() => {
+  return dexEntries.value.filter((entry) =>
+    entry.name.toLowerCase().includes(search.value.toLowerCase())
+  )
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredDexEntries.value.length / itemsPerPage)
+})
+
+const paginatedDexEntries = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+
+  return filteredDexEntries.value.slice(start, end)
 })
 
 const obtainedCount = computed(() => {
@@ -38,38 +79,22 @@ const progressPercentage = computed(() => {
   )
 })
 
-const dexEntries = computed(() => {
-  return pokemonDex.map((pokemon) => {
-    const ownedShinies = shinies.value.filter((shiny) => {
-      const samePokemon =
-        shiny.pokemon.toLowerCase() === pokemon.name.toLowerCase()
+function previousPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
 
-      if (!samePokemon) {
-        return false
-      }
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
 
-      if (pokemon.gender) {
-        return shiny.gender === pokemon.gender
-      }
-
-      return true
-    })
-
-    return {
-      ...pokemon,
-      obtained: ownedShinies.length > 0,
-      shinies: ownedShinies
-    }
-  })
-})
-
-const filteredShinies = computed(() => {
-  return shinies.value.filter((shiny) =>
-    shiny.pokemon.toLowerCase().includes(search.value.toLowerCase())
-  )
+watch(search, () => {
+  currentPage.value = 1
 })
 </script>
-
 
 <template>
   <main class="page">
@@ -77,22 +102,22 @@ const filteredShinies = computed(() => {
       <h1>My Shiny Collection</h1>
 
       <section class="progress-section">
-  <div class="progress-info">
-    <span>Living Dex Progress</span>
+        <div class="progress-info">
+          <span>Living Dex Progress</span>
 
-    <span>
-      {{ obtainedCount }} / {{ dexEntries.length }}
-      — {{ progressPercentage }}%
-    </span>
-  </div>
+          <span>
+            {{ obtainedCount }} / {{ dexEntries.length }}
+            — {{ progressPercentage }}%
+          </span>
+        </div>
 
-  <div class="progress-bar">
-    <div
-      class="progress-fill"
-      :style="{ width: `${progressPercentage}%` }"
-    ></div>
-  </div>
-</section>
+        <div class="progress-bar">
+          <div
+            class="progress-fill"
+            :style="{ width: `${progressPercentage}%` }"
+          ></div>
+        </div>
+      </section>
 
       <input
         class="search"
@@ -104,11 +129,34 @@ const filteredShinies = computed(() => {
 
     <section class="grid">
       <DexCard
-  v-for="entry in filteredDexEntries"
-  :key="`${entry.dexNumber}-${entry.gender ?? 'default'}`"
-  :entry="entry"
-/>
+        v-for="entry in paginatedDexEntries"
+        :key="`${entry.dexNumber}-${entry.form ?? 'normal'}-${entry.gender ?? 'default'}`"
+        :entry="entry"
+      />
     </section>
+
+    <div
+      v-if="totalPages > 1"
+      class="pagination"
+    >
+      <button
+        @click="previousPage"
+        :disabled="currentPage === 1"
+      >
+        ← Previous
+      </button>
+
+      <span>
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
+
+      <button
+        @click="nextPage"
+        :disabled="currentPage === totalPages"
+      >
+        Next →
+      </button>
+    </div>
   </main>
 </template>
 
@@ -163,5 +211,28 @@ const filteredShinies = computed(() => {
   border-radius: 999px;
   transition: width 0.3s ease;
 }
-</style>
 
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 40px;
+}
+
+.pagination button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pagination span {
+  font-weight: 600;
+}
+</style>
