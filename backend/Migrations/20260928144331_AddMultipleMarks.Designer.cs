@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UltimateShinyDex.Api.Data;
 
@@ -10,9 +11,11 @@ using UltimateShinyDex.Api.Data;
 namespace UltimateShinyDex.Api.Migrations
 {
     [DbContext(typeof(ShinyDbContext))]
-    partial class ShinyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260928144331_AddMultipleMarks")]
+    partial class AddMultipleMarks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -31,9 +34,6 @@ namespace UltimateShinyDex.Api.Migrations
 
                     b.Property<string>("Ball")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CustomSpritePath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("Encounters")
