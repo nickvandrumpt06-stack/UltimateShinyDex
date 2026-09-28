@@ -3,6 +3,7 @@ import EditShinyView from '../views/EditShinyView.vue'
 
 import HomeView from '../views/HomeView.vue'
 import AddShinyView from '../views/AddShinyView.vue'
+import BackupView from '../views/BackupView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,7 +23,12 @@ const router = createRouter({
       path: '/edit/:id',
       name: 'edit-shiny',
       component: EditShinyView
-    }
+    },
+    {
+  path: '/backup',
+  name: 'backup',
+  component: BackupView
+}
   ]
 })
 

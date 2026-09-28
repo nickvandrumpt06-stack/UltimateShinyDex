@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UltimateShinyDex.Api.Data;
 using UltimateShinyDex.Api.Models;
+using UltimateShinyDex.Api.Models.Backup;
 
 namespace UltimateShinyDex.Api.Controllers
 {
@@ -26,7 +27,107 @@ namespace UltimateShinyDex.Api.Controllers
             return Ok(shinies);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("export")]
+        public async Task<ActionResult<ShinyBackup>> ExportCollection()
+        {
+            var shinies = await _context.Shinies
+                .Include(shiny => shiny.Marks)
+                .ToListAsync();
+
+            var backup = new ShinyBackup
+            {
+                Version = 1,
+                ExportedAt = DateTime.UtcNow,
+
+                Shinies = shinies.Select(shiny => new ShinyBackupItem
+                {
+                    Pokemon = shiny.Pokemon,
+                    Nickname = shiny.Nickname,
+                    Nature = shiny.Nature,
+                    Game = shiny.Game,
+                    Ball = shiny.Ball,
+                    Method = shiny.Method,
+                    Encounters = shiny.Encounters,
+                    IsAlpha = shiny.IsAlpha,
+                    Gender = shiny.Gender,
+                    Form = shiny.Form,
+
+                    Marks = shiny.Marks
+                        .Select(mark => mark.MarkName)
+                        .ToList()
+                }).ToList()
+            };
+
+            return Ok(backup);
+        }
+
+        [HttpPost("import")]
+        public async Task<IActionResult> ImportCollection(ShinyBackup backup)
+        {
+            if (backup == null || backup.Shinies == null)
+            {
+                return BadRequest("Invalid backup file.");
+            }
+
+            var existingShinies = await _context.Shinies
+                .Include(shiny => shiny.Marks)
+                .ToListAsync();
+
+            _context.Shinies.RemoveRange(existingShinies);
+
+            foreach (var backupShiny in backup.Shinies)
+            {
+                var shiny = new Shiny
+                {
+                    Pokemon = backupShiny.Pokemon,
+                    Nickname = backupShiny.Nickname,
+                    Nature = backupShiny.Nature,
+                    Game = backupShiny.Game,
+                    Ball = backupShiny.Ball,
+                    Method = backupShiny.Method,
+                    Encounters = backupShiny.Encounters,
+                    IsAlpha = backupShiny.IsAlpha,
+                    Gender = backupShiny.Gender,
+                    Form = backupShiny.Form,
+
+                    // Custom images intentionally do not transfer.
+                    CustomSpritePath = null
+                };
+
+                foreach (var markName in backupShiny.Marks)
+                {
+                    shiny.Marks.Add(new ShinyMark
+                    {
+                        MarkName = markName
+                    });
+                }
+
+                _context.Shinies.Add(shiny);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                imported = backup.Shinies.Count
+            });
+        }
+
+        [HttpDelete("all")]
+        public async Task<IActionResult> DeleteAllShinies()
+        {
+            var shinies = await _context.Shinies
+                .Include(shiny => shiny.Marks)
+                .ToListAsync();
+
+            _context.Shinies.RemoveRange(shinies);
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpGet("{id:int}")]
         public async Task<ActionResult<Shiny>> GetById(int id)
         {
             var shiny = await _context.Shinies
@@ -51,7 +152,7 @@ namespace UltimateShinyDex.Api.Controllers
             return Ok(shiny);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateShiny(
             int id,
             Shiny updatedShiny
@@ -92,7 +193,7 @@ namespace UltimateShinyDex.Api.Controllers
             return NoContent();
         }
 
-        [HttpPost("{id}/sprite")]
+        [HttpPost("{id:int}/sprite")]
         public async Task<IActionResult> UploadSprite(
             int id,
             IFormFile file
@@ -148,7 +249,7 @@ namespace UltimateShinyDex.Api.Controllers
             });
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteShiny(int id)
         {
             var shiny = await _context.Shinies.FindAsync(id);

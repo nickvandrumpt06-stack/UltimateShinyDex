@@ -10,6 +10,7 @@ import { RouterLink, RouterView } from 'vue-router'
       <nav>
         <RouterLink to="/">My Shinies</RouterLink>
         <RouterLink to="/add">Add Shiny</RouterLink>
+        <RouterLink to="/backup">Backup</RouterLink>
       </nav>
     </div>
   </header>
