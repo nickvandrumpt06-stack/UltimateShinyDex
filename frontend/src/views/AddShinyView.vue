@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { natures, games, balls } from '../data/options'
 import { pokemonDex } from '../data/pokedex'
-import { marks } from '../data/marks'
+import { marksAndRibbons } from '../data/marks'
 
 const router = useRouter()
 
@@ -32,6 +32,65 @@ const availableForms = computed(() => {
   return [...new Set(forms)]
 })
 
+const hasDefaultForm = computed(() => {
+  return pokemonDex.some(
+    (entry) =>
+      entry.name.toLowerCase() === pokemon.value.toLowerCase() &&
+      !entry.form
+  )
+})
+
+const availableMarks = computed(() => {
+  return marksAndRibbons.filter(
+    (item) => item.type === 'Mark'
+  )
+})
+
+const availableRibbons = computed(() => {
+  return marksAndRibbons.filter(
+    (item) => item.type === 'Ribbon'
+  )
+})
+
+const defaultFormOverrides = {
+  Pumpkaboo: 'Average Size',
+  Gourgeist: 'Average Size'
+}
+
+watch(pokemon, (newPokemon) => {
+  const matchingEntries = pokemonDex.filter(
+    (entry) =>
+      entry.name.toLowerCase() === newPokemon.toLowerCase()
+  )
+
+  if (matchingEntries.length === 0) {
+    form.value = ''
+    return
+  }
+
+  const override = defaultFormOverrides[newPokemon]
+
+  if (override) {
+    form.value = override
+    return
+  }
+
+  const hasDefaultEntry = matchingEntries.some(
+    (entry) => !entry.form
+  )
+
+  if (hasDefaultEntry) {
+    form.value = ''
+    return
+  }
+
+  const firstForm = matchingEntries.find(
+    (entry) => entry.form
+  )
+
+  form.value = firstForm?.form ?? ''
+})
+
 async function addShiny() {
   const newShiny = {
     pokemon: pokemon.value,
@@ -40,11 +99,15 @@ async function addShiny() {
     game: game.value,
     ball: ball.value,
     method: method.value,
-    encounters: encounters.value ? parseInt(encounters.value) : null,
+    encounters: encounters.value
+      ? parseInt(encounters.value)
+      : null,
     isAlpha: isAlpha.value,
+
     marks: selectedMarks.value.map((markName) => ({
-  markName: markName
-})),
+      markName: markName
+    })),
+
     gender: gender.value,
     form: form.value
   }
@@ -72,6 +135,7 @@ async function addShiny() {
       <form @submit.prevent="addShiny" class="shiny-form">
         <div class="form-group">
           <label for="pokemon">Pokémon</label>
+
           <input
             type="text"
             id="pokemon"
@@ -83,6 +147,7 @@ async function addShiny() {
 
         <div class="form-group">
           <label for="nickname">Nickname</label>
+
           <input
             type="text"
             id="nickname"
@@ -93,6 +158,7 @@ async function addShiny() {
 
         <div class="form-group">
           <label for="nature">Nature</label>
+
           <select
             id="nature"
             v-model="nature"
@@ -114,6 +180,7 @@ async function addShiny() {
 
         <div class="form-group">
           <label for="game">Game</label>
+
           <select
             id="game"
             v-model="game"
@@ -135,6 +202,7 @@ async function addShiny() {
 
         <div class="form-group">
           <label for="ball">Ball</label>
+
           <select
             id="ball"
             v-model="ball"
@@ -156,6 +224,7 @@ async function addShiny() {
 
         <div class="form-group">
           <label for="method">Method</label>
+
           <input
             type="text"
             id="method"
@@ -166,6 +235,7 @@ async function addShiny() {
 
         <div class="form-group">
           <label for="encounters">Encounters</label>
+
           <input
             type="number"
             id="encounters"
@@ -176,35 +246,68 @@ async function addShiny() {
         </div>
 
         <div class="form-group marks-group">
-  <label>Marks</label>
+          <label>Marks & Ribbons</label>
 
-  <div class="marks-list">
-    <label
-      v-for="markOption in marks"
-      :key="markOption.name"
-      class="mark-option"
-    >
-      <input
-        type="checkbox"
-        :value="markOption.name"
-        v-model="selectedMarks"
-      />
+          <div class="marks-section">
+            <h3>Marks</h3>
 
-      <img
-        :src="markOption.image"
-        :alt="markOption.name"
-        class="mark-option-icon"
-      />
+            <div class="marks-list">
+              <label
+                v-for="markOption in availableMarks"
+                :key="markOption.name"
+                class="mark-option"
+              >
+                <input
+                  type="checkbox"
+                  :value="markOption.name"
+                  v-model="selectedMarks"
+                />
 
-      <span>
-        {{ markOption.name }}
-      </span>
-    </label>
-  </div>
-</div>
+                <img
+                  :src="markOption.image"
+                  :alt="markOption.name"
+                  class="mark-option-icon"
+                />
+
+                <span>
+                  {{ markOption.name }}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="marks-section">
+            <h3>Ribbons</h3>
+
+            <div class="marks-list">
+              <label
+                v-for="ribbonOption in availableRibbons"
+                :key="ribbonOption.name"
+                class="mark-option"
+              >
+                <input
+                  type="checkbox"
+                  :value="ribbonOption.name"
+                  v-model="selectedMarks"
+                />
+
+                <img
+                  :src="ribbonOption.image"
+                  :alt="ribbonOption.name"
+                  class="mark-option-icon"
+                />
+
+                <span>
+                  {{ ribbonOption.name }}
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
 
         <div class="form-group">
           <label for="gender">Gender</label>
+
           <select
             id="gender"
             v-model="gender"
@@ -213,20 +316,32 @@ async function addShiny() {
               Not applicable / unknown
             </option>
 
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Genderless">Genderless</option>
+            <option value="Male">
+              Male
+            </option>
+
+            <option value="Female">
+              Female
+            </option>
+
+            <option value="Genderless">
+              Genderless
+            </option>
           </select>
         </div>
 
         <div class="form-group">
           <label for="form">Form</label>
+
           <select
             id="form"
             v-model="form"
           >
-            <option value="">
-              Normal
+            <option
+              v-if="hasDefaultForm || availableForms.length === 0"
+              value=""
+            >
+              Default / Original
             </option>
 
             <option
@@ -246,6 +361,7 @@ async function addShiny() {
               id="isAlpha"
               v-model="isAlpha"
             />
+
             Alpha Pokémon
           </label>
         </div>
@@ -367,18 +483,24 @@ async function addShiny() {
   transform: translateY(0);
 }
 
-@media (max-width: 700px) {
-  .shiny-form {
-    grid-template-columns: 1fr;
-  }
-
-  .form-card {
-    padding: 24px;
-  }
-}
-
 .marks-group {
   grid-column: 1 / -1;
+}
+
+.marks-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.marks-section + .marks-section {
+  margin-top: 16px;
+}
+
+.marks-section h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #374151;
 }
 
 .marks-list {
@@ -418,6 +540,14 @@ async function addShiny() {
 }
 
 @media (max-width: 700px) {
+  .shiny-form {
+    grid-template-columns: 1fr;
+  }
+
+  .form-card {
+    padding: 24px;
+  }
+
   .marks-list {
     grid-template-columns: 1fr;
   }

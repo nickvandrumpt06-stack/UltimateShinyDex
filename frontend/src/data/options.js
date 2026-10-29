@@ -97,11 +97,14 @@ export const balls = [
     'Heavy Ball',
     'Fast Ball',
     'Love Ball',
+
     'Sport Ball',
-    'Gigaton Ball',
-    'Wing Ball',
-    'Feather Ball',
-    'Jet Ball',
-    'Heavy Ball (PLA)',
-    'Leaden Ball'
+
+'Heavy Ball (PLA)',
+'Leaden Ball',
+'Gigaton Ball',
+'Feather Ball',
+'Wing Ball',
+'Jet Ball',
+'Origin Ball'
 ]

@@ -6,6 +6,14 @@ import DexCard from '../components/DexCard.vue'
 const shinies = ref([])
 const search = ref('')
 const currentPage = ref(1)
+
+watch(currentPage, () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  })
+})
+
 const itemsPerPage = 60
 
 async function loadShinies() {

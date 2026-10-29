@@ -1391,7 +1391,7 @@ export const pokemonDex = [
   { dexNumber: 719, name: 'Diancie' },
 
   { dexNumber: 720, name: 'Hoopa' },
-  { dexNumber: 720, name: 'Hoopa', Form: 'Unbound'},
+  { dexNumber: 720, name: 'Hoopa', form: 'Unbound'},
 
   { dexNumber: 721, name: 'Volcanion' },
 

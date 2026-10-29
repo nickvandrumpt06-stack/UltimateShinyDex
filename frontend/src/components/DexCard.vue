@@ -2,8 +2,12 @@
 import { ref, computed } from 'vue'
 import alphaSymbol from '../assets/alpha-symbol.png'
 import { ballSprites } from '../data/ballSprites'
-import { marks } from '../data/marks'
+import { marksAndRibbons } from '../data/marks'
 import { RouterLink } from 'vue-router'
+import {
+  formSprites,
+  shinyFemale
+} from '../data/formSprites'
 
 const expanded = ref(false)
 
@@ -29,6 +33,28 @@ const spriteUrl = computed(() => {
     return null
   }
 
+  const genderSpriteKey =
+  `${props.entry.name}|${props.entry.form ?? ''}|${props.entry.gender ?? ''}`
+
+const genderFormSprite = formSprites[genderSpriteKey]
+
+if (genderFormSprite) {
+  return genderFormSprite
+}
+
+const spriteKey =
+  `${props.entry.name}|${props.entry.form ?? ''}`
+
+const formSprite = formSprites[spriteKey]
+
+if (formSprite) {
+  return formSprite
+}
+
+  if (props.entry.gender === 'Female') {
+    return shinyFemale(props.entry.dexNumber)
+  }
+
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${props.entry.dexNumber}.png`
 })
 
@@ -42,8 +68,8 @@ const currentMarkImages = computed(() => {
   }
 
   return currentShiny.value.marks.map((shinyMark) => {
-    const markData = marks.find(
-      (mark) => mark.name === shinyMark.markName
+    const markData = marksAndRibbons.find(
+      (item) => item.name === shinyMark.markName
     )
 
     return {
@@ -51,6 +77,20 @@ const currentMarkImages = computed(() => {
       image: markData?.image ?? null
     }
   })
+})
+
+const visibleMarkImages = computed(() => {
+  return currentMarkImages.value
+    .filter((mark) => mark.image)
+    .slice(0, 5)
+})
+
+const hiddenMarkCount = computed(() => {
+  const totalWithImages = currentMarkImages.value.filter(
+    (mark) => mark.image
+  ).length
+
+  return Math.max(totalWithImages - 5, 0)
 })
 
 function previousShiny() {
@@ -84,8 +124,6 @@ function toggleExpanded() {
         :src="spriteUrl"
         :alt="`Shiny ${entry.name}`"
         class="pokemon-sprite"
-
-        
       />
 
       <span v-else>
@@ -115,32 +153,39 @@ function toggleExpanded() {
       </p>
 
       <div class="summary-icons">
-  <img
-    v-if="ballImageUrl"
-    :src="ballImageUrl"
-    :alt="currentShiny.ball"
-    :title="currentShiny.ball"
-    class="ball-icon"
-  />
+        <img
+          v-if="ballImageUrl"
+          :src="ballImageUrl"
+          :alt="currentShiny.ball"
+          :title="currentShiny.ball"
+          class="ball-icon"
+        />
 
-  <img
-    v-if="currentShiny.isAlpha"
-    :src="alphaSymbol"
-    alt="Alpha Pokémon"
-    title="Alpha Pokémon"
-    class="alpha-icon"
-  />
+        <img
+          v-if="currentShiny.isAlpha"
+          :src="alphaSymbol"
+          alt="Alpha Pokémon"
+          title="Alpha Pokémon"
+          class="alpha-icon"
+        />
 
-  <img
-  v-for="mark in currentMarkImages"
-  :key="mark.name"
-  v-show="mark.image"
-  :src="mark.image"
-  :alt="mark.name"
-  :title="mark.name"
-  class="mark-icon"
-/>
-</div>
+        <img
+          v-for="mark in visibleMarkImages"
+          :key="mark.name"
+          :src="mark.image"
+          :alt="mark.name"
+          :title="mark.name"
+          class="mark-icon"
+        />
+
+        <span
+          v-if="hiddenMarkCount > 0"
+          class="extra-mark-count"
+          :title="`${hiddenMarkCount} more Marks or Ribbons`"
+        >
+          +{{ hiddenMarkCount }}
+        </span>
+      </div>
 
       <div
         v-if="expanded"
@@ -177,20 +222,20 @@ function toggleExpanded() {
         </p>
 
         <div
-  v-if="currentShiny.marks?.length"
-  class="mark-details"
->
-  <strong>Marks:</strong>
+          v-if="currentShiny.marks?.length"
+          class="mark-details"
+        >
+          <strong>Marks & Ribbons:</strong>
 
-  <ul>
-    <li
-      v-for="mark in currentShiny.marks"
-      :key="mark.id"
-    >
-      {{ mark.markName }}
-    </li>
-  </ul>
-</div>
+          <ul>
+            <li
+              v-for="mark in currentShiny.marks"
+              :key="mark.id"
+            >
+              {{ mark.markName }}
+            </li>
+          </ul>
+        </div>
       </div>
 
       <p class="details-hint">
@@ -198,12 +243,12 @@ function toggleExpanded() {
       </p>
 
       <RouterLink
-  class="edit-link"
-  :to="`/edit/${currentShiny.id}`"
-  @click.stop
->
-  Edit
-</RouterLink>
+        class="edit-link"
+        :to="`/edit/${currentShiny.id}`"
+        @click.stop
+      >
+        Edit
+      </RouterLink>
     </div>
 
     <div v-else class="missing">
@@ -339,6 +384,7 @@ function toggleExpanded() {
   align-items: center;
   gap: 8px;
   margin-top: 10px;
+  flex-wrap: wrap;
 }
 
 .ball-icon {
@@ -358,6 +404,21 @@ function toggleExpanded() {
   width: 32px;
   height: 32px;
   object-fit: contain;
+}
+
+.extra-mark-count {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 7px;
+  border-radius: 16px;
+  background: #f3f4f6;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-sizing: border-box;
 }
 
 .mark-details ul {

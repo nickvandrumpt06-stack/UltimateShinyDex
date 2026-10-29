@@ -80,25 +80,25 @@ export const ballSprites = {
   'Cherish Ball':
     'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/cherish-ball.png',
 
-  // Pokémon Legends: Arceus balls
-  'Heavy Ball (PLA)':
-    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/heavy-ball.png',
+    // Pokémon Legends: Arceus balls
+'Heavy Ball (PLA)':
+  '/balls/heavy-ball-pla.png',
 
-  'Leaden Ball':
-    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/leaden-ball.png',
+'Leaden Ball':
+  '/balls/leaden-ball.png',
 
-  'Gigaton Ball':
-    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/gigaton-ball.png',
+'Gigaton Ball':
+  '/balls/gigaton-ball.png',
 
-  'Feather Ball':
-    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/feather-ball.png',
+'Feather Ball':
+  '/balls/feather-ball.png',
 
-  'Wing Ball':
-    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/wing-ball.png',
+'Wing Ball':
+  '/balls/wing-ball.png',
 
-  'Jet Ball':
-    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/jet-ball.png',
+'Jet Ball':
+  '/balls/jet-ball.png',
 
-  'Origin Ball':
-    'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/origin-ball.png'
+'Origin Ball':
+  '/balls/origin-ball.png'
 }

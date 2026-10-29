@@ -3,7 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { natures, games, balls } from '../data/options'
 import { pokemonDex } from '../data/pokedex'
-import { marks } from '../data/marks'
+import { marksAndRibbons } from '../data/marks'
 
 const route = useRoute()
 const router = useRouter()
@@ -24,6 +24,7 @@ const selectedMarks = ref([])
 const selectedSpriteFile = ref(null)
 const currentSpritePath = ref('')
 
+
 const availableForms = computed(() => {
   const matchingEntries = pokemonDex.filter(
     (entry) =>
@@ -37,14 +38,97 @@ const availableForms = computed(() => {
   return [...new Set(forms)]
 })
 
-watch(pokemon, () => {
-  if (
-    form.value &&
-    !availableForms.value.includes(form.value)
-  ) {
-    form.value = ''
-  }
+const hasDefaultForm = computed(() => {
+  return pokemonDex.some(
+    (entry) =>
+      entry.name.toLowerCase() === pokemon.value.toLowerCase() &&
+      !entry.form
+  )
 })
+
+const availableMarks = computed(() => {
+  return marksAndRibbons.filter(
+    (item) => item.type === 'Mark'
+  )
+})
+
+const availableRibbons = computed(() => {
+  return marksAndRibbons.filter(
+    (item) => item.type === 'Ribbon'
+  )
+})
+
+const defaultFormOverrides = {
+  Pumpkaboo: 'Average Size',
+  Gourgeist: 'Average Size'
+}
+
+watch(pokemon, (newPokemon) => {
+  const matchingEntries = pokemonDex.filter(
+    (entry) =>
+      entry.name.toLowerCase() === newPokemon.toLowerCase()
+  )
+
+  if (matchingEntries.length === 0) {
+    form.value = ''
+    return
+  }
+
+  const currentFormIsValid =
+    form.value &&
+    matchingEntries.some(
+      (entry) => entry.form === form.value
+    )
+
+  if (currentFormIsValid) {
+    return
+  }
+
+  const override = defaultFormOverrides[newPokemon]
+
+  if (override) {
+    form.value = override
+    return
+  }
+
+  const hasDefaultEntry = matchingEntries.some(
+    (entry) => !entry.form
+  )
+
+  if (hasDefaultEntry) {
+    form.value = ''
+    return
+  }
+
+  const firstForm = matchingEntries.find(
+    (entry) => entry.form
+  )
+
+  form.value = firstForm?.form ?? ''
+})
+
+async function deleteShiny() {
+  const confirmed = window.confirm(
+    `Delete ${pokemon.value} from your collection?`
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  const response = await fetch(
+    `http://localhost:5119/api/shinies/${route.params.id}`,
+    {
+      method: 'DELETE'
+    }
+  )
+
+  if (!response.ok) {
+    throw new Error('Deleting shiny failed')
+  }
+
+  router.push('/')
+}
 
 async function loadShiny() {
   const response = await fetch(
@@ -297,8 +381,11 @@ onMounted(() => {
             id="form"
             v-model="form"
           >
-            <option value="">
-              Normal
+            <option
+              v-if="hasDefaultForm || availableForms.length === 0"
+              value=""
+            >
+              Default / Original
             </option>
 
             <option
@@ -324,30 +411,62 @@ onMounted(() => {
         </div>
 
         <div class="form-group marks-group">
-          <label>Marks</label>
+          <label>Marks & Ribbons</label>
 
-          <div class="marks-list">
-            <label
-              v-for="markOption in marks"
-              :key="markOption.name"
-              class="mark-option"
-            >
-              <input
-                v-model="selectedMarks"
-                type="checkbox"
-                :value="markOption.name"
-              />
+          <div class="marks-section">
+            <h3>Marks</h3>
 
-              <img
-                :src="markOption.image"
-                :alt="markOption.name"
-                class="mark-option-icon"
-              />
+            <div class="marks-list">
+              <label
+                v-for="markOption in availableMarks"
+                :key="markOption.name"
+                class="mark-option"
+              >
+                <input
+                  v-model="selectedMarks"
+                  type="checkbox"
+                  :value="markOption.name"
+                />
 
-              <span>
-                {{ markOption.name }}
-              </span>
-            </label>
+                <img
+                  :src="markOption.image"
+                  :alt="markOption.name"
+                  class="mark-option-icon"
+                />
+
+                <span>
+                  {{ markOption.name }}
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="marks-section">
+            <h3>Ribbons</h3>
+
+            <div class="marks-list">
+              <label
+                v-for="ribbonOption in availableRibbons"
+                :key="ribbonOption.name"
+                class="mark-option"
+              >
+                <input
+                  v-model="selectedMarks"
+                  type="checkbox"
+                  :value="ribbonOption.name"
+                />
+
+                <img
+                  :src="ribbonOption.image"
+                  :alt="ribbonOption.name"
+                  class="mark-option-icon"
+                />
+
+                <span>
+                  {{ ribbonOption.name }}
+                </span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -373,11 +492,22 @@ onMounted(() => {
           </p>
         </div>
 
-        <div class="form-actions">
-          <button type="submit">
-            Save Changes
-          </button>
-        </div>
+<div class="form-actions">
+  <button
+    type="submit"
+    class="save-button"
+  >
+    Save Changes
+  </button>
+
+  <button
+    type="button"
+    class="delete-button"
+    @click="deleteShiny"
+  >
+    Delete Shiny
+  </button>
+</div>
       </form>
     </section>
   </main>
@@ -465,6 +595,22 @@ onMounted(() => {
   grid-column: 1 / -1;
 }
 
+.marks-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.marks-section + .marks-section {
+  margin-top: 16px;
+}
+
+.marks-section h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #374151;
+}
+
 .marks-list {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -541,5 +687,35 @@ onMounted(() => {
   .form-card {
     padding: 24px;
   }
+}
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.form-actions button {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.save-button {
+  background: #111827;
+}
+
+.delete-button {
+  background: #b91c1c;
+}
+
+.form-actions button:hover {
+  opacity: 0.9;
 }
 </style>
