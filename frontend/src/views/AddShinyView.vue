@@ -19,6 +19,9 @@ const selectedMarks = ref([])
 const gender = ref('')
 const form = ref('')
 
+const addMultiple = ref(false)
+const successMessage = ref('')
+
 const availableForms = computed(() => {
   const matchingEntries = pokemonDex.filter(
     (entry) =>
@@ -92,6 +95,7 @@ watch(pokemon, (newPokemon) => {
 })
 
 async function addShiny() {
+  successMessage.value = ''
   const newShiny = {
     pokemon: pokemon.value,
     nickname: nickname.value,
@@ -112,15 +116,28 @@ async function addShiny() {
     form: form.value
   }
 
-  await fetch('http://localhost:5119/api/shinies', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(newShiny)
-  })
+const response = await fetch('http://localhost:5119/api/shinies', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(newShiny)
+})
 
+if (!response.ok) {
+  throw new Error('Adding shiny failed')
+}
+
+if (addMultiple.value) {
+  successMessage.value =
+    `${pokemon.value} has been added to your collection.`
+
+  setTimeout(() => {
+    successMessage.value = ''
+  }, 2500)
+} else {
   router.push('/')
+}
 }
 </script>
 
@@ -366,6 +383,25 @@ async function addShiny() {
           </label>
         </div>
 
+        <div class="form-group checkbox-group">
+  <label for="addMultiple">
+    <input
+      type="checkbox"
+      id="addMultiple"
+      v-model="addMultiple"
+    />
+
+    Add multiple shinies
+  </label>
+</div>
+
+<div
+  v-if="successMessage"
+  class="success-message"
+>
+  {{ successMessage }}
+</div>
+
         <div class="form-actions">
           <button type="submit">
             Add Shiny
@@ -537,6 +573,16 @@ async function addShiny() {
   width: 28px;
   height: 28px;
   object-fit: contain;
+}
+
+.success-message {
+  grid-column: 1 / -1;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #dcfce7;
+  color: #166534;
+  text-align: center;
+  font-weight: 600;
 }
 
 @media (max-width: 700px) {

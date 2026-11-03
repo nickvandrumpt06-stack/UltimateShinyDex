@@ -77,6 +77,10 @@ const obtainedCount = computed(() => {
   return dexEntries.value.filter((entry) => entry.obtained).length
 })
 
+const totalShinyCount = computed(() => {
+  return shinies.value.length
+})
+
 const progressPercentage = computed(() => {
   if (dexEntries.value.length === 0) {
     return 0
@@ -125,6 +129,10 @@ watch(search, () => {
             :style="{ width: `${progressPercentage}%` }"
           ></div>
         </div>
+
+        <div class="total-shinies">
+  Total Shinies: {{ totalShinyCount }}
+</div>
       </section>
 
       <input
@@ -241,6 +249,11 @@ watch(search, () => {
 }
 
 .pagination span {
+  font-weight: 600;
+}
+
+.total-shinies {
+  margin-top: 10px;
   font-weight: 600;
 }
 </style>
