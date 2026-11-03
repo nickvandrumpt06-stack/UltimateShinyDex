@@ -200,12 +200,11 @@ export const formSprites = {
   'Poltchageist|Artisan Form': shinyForm(1012, 'artisan'),
   'Sinistcha|Masterpiece Form': shinyForm(1013, 'masterpiece'),
 
+  // Special gender sprites
   'Oinkologne||Female': shinyById(10254),
-
-'Basculegion||Female': shinyById(10248),
-
-'Sneasel|Hisuian|Female':
-  `${spriteBase}/female/10235.png`,
+  'Basculegion||Female': shinyById(10248),
+  'Sneasel|Hisuian|Female':
+    `${spriteBase}/female/10235.png`
 }
 
 // Unown
@@ -303,20 +302,19 @@ for (const [formName, spriteName] of Object.entries(flowerColours)) {
 
 // Furfrou
 const furfrouTrims = {
-  'Heart Trim': 'heart',
-  'Star Trim': 'star',
-  'Diamond Trim': 'diamond',
-  'Debutante Trim': 'debutante',
-  'Matron Trim': 'matron',
-  'Dandy Trim': 'dandy',
-  'La Reine Trim': 'la-reine',
-  'Kabuki Trim': 'kabuki',
-  'Pharaoh Trim': 'pharaoh'
+  'Heart Trim': '/furfrou/heart.png',
+  'Star Trim': '/furfrou/star.png',
+  'Diamond Trim': '/furfrou/diamond.png',
+  'Debutante Trim': '/furfrou/debutante.png',
+  'Matron Trim': '/furfrou/matron.png',
+  'Dandy Trim': '/furfrou/dandy.png',
+  'La Reine Trim': '/furfrou/la-reine.png',
+  'Kabuki Trim': '/furfrou/kabuki.png',
+  'Pharaoh Trim': '/furfrou/pharaoh.png'
 }
 
-for (const [formName, spriteName] of Object.entries(furfrouTrims)) {
-  formSprites[`Furfrou|${formName}`] =
-    shinyForm(676, spriteName)
+for (const [formName, spritePath] of Object.entries(furfrouTrims)) {
+  formSprites[`Furfrou|${formName}`] = spritePath
 }
 
 // Alcremie

@@ -34,22 +34,22 @@ const spriteUrl = computed(() => {
   }
 
   const genderSpriteKey =
-  `${props.entry.name}|${props.entry.form ?? ''}|${props.entry.gender ?? ''}`
+    `${props.entry.name}|${props.entry.form ?? ''}|${props.entry.gender ?? ''}`
 
-const genderFormSprite = formSprites[genderSpriteKey]
+  const genderFormSprite = formSprites[genderSpriteKey]
 
-if (genderFormSprite) {
-  return genderFormSprite
-}
+  if (genderFormSprite) {
+    return genderFormSprite
+  }
 
-const spriteKey =
-  `${props.entry.name}|${props.entry.form ?? ''}`
+  const spriteKey =
+    `${props.entry.name}|${props.entry.form ?? ''}`
 
-const formSprite = formSprites[spriteKey]
+  const formSprite = formSprites[spriteKey]
 
-if (formSprite) {
-  return formSprite
-}
+  if (formSprite) {
+    return formSprite
+  }
 
   if (props.entry.gender === 'Female') {
     return shinyFemale(props.entry.dexNumber)
@@ -124,6 +124,12 @@ function toggleExpanded() {
         :src="spriteUrl"
         :alt="`Shiny ${entry.name}`"
         class="pokemon-sprite"
+        :class="{
+  'furfrou-trim-sprite':
+    entry.name === 'Furfrou' &&
+    entry.form &&
+    entry.form !== 'Natural Form'
+}"
       />
 
       <span v-else>
@@ -317,6 +323,11 @@ function toggleExpanded() {
   height: 140px;
   object-fit: contain;
   image-rendering: pixelated;
+}
+
+.furfrou-trim-sprite {
+  width: 100px;
+  height: 100px;
 }
 
 .form,
