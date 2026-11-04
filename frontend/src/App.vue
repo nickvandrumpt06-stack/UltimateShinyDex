@@ -7,11 +7,12 @@ import { RouterLink, RouterView } from 'vue-router'
     <div class="navbar-inner">
       <h1 class="logo">Ultimate Shiny Dex</h1>
 
-      <nav>
-        <RouterLink to="/">My Shinies</RouterLink>
-        <RouterLink to="/add">Add Shiny</RouterLink>
-        <RouterLink to="/backup">Backup</RouterLink>
-      </nav>
+<nav>
+  <RouterLink to="/">My Shinies</RouterLink>
+  <RouterLink to="/add">Add Shiny</RouterLink>
+  <RouterLink to="/stats">Stats</RouterLink>
+  <RouterLink to="/backup">Backup</RouterLink>
+</nav>
     </div>
   </header>
 
