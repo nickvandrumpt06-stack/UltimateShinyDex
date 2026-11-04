@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import { gameGroups } from '../data/gameGroups'
 
 const shinies = ref([])
@@ -97,18 +98,24 @@ function getPercentage(count) {
       v-else
       class="game-grid"
     >
-      <article
+      <RouterLink
         v-for="group in gameStats"
         :key="group.key"
         class="game-card"
+        :to="{
+          path: '/',
+          query: {
+            gameGroup: group.key
+          }
+        }"
       >
-<div class="cover-wrapper">
-  <img
-    :src="group.cover"
-    :alt="group.name"
-    class="game-cover"
-  />
-</div>
+        <div class="cover-wrapper">
+          <img
+            :src="group.cover"
+            :alt="group.name"
+            class="game-cover"
+          />
+        </div>
 
         <div class="game-info">
           <h2>
@@ -143,7 +150,7 @@ function getPercentage(count) {
             </div>
           </div>
         </div>
-      </article>
+      </RouterLink>
     </section>
   </main>
 </template>
@@ -192,6 +199,11 @@ function getPercentage(count) {
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
+
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
@@ -265,10 +277,6 @@ function getPercentage(count) {
 
   .page-header h1 {
     font-size: 2rem;
-  }
-
-  .cover-wrapper {
-    height: 240px;
   }
 }
 </style>

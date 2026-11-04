@@ -18,7 +18,8 @@ async function loadShinies() {
     shinies.value = await response.json()
   } catch (error) {
     console.error(error)
-    errorMessage.value = 'Could not load collection statistics.'
+    errorMessage.value =
+      'Could not load collection statistics.'
   } finally {
     isLoading.value = false
   }
@@ -36,14 +37,16 @@ const obtainedDexSlots = computed(() => {
   return pokemonDex.filter((pokemon) => {
     return shinies.value.some((shiny) => {
       const samePokemon =
-        shiny.pokemon.toLowerCase() === pokemon.name.toLowerCase()
+        shiny.pokemon.toLowerCase() ===
+        pokemon.name.toLowerCase()
 
       if (!samePokemon) {
         return false
       }
 
       const sameGender =
-        !pokemon.gender || shiny.gender === pokemon.gender
+        !pokemon.gender ||
+        shiny.gender === pokemon.gender
 
       const sameForm =
         !pokemon.form
@@ -90,22 +93,77 @@ const totalEncounters = computed(() => {
   }, 0)
 })
 
-const gameBreakdown = computed(() => {
+const mostOwnedNature = computed(() => {
   const counts = {}
 
   for (const shiny of shinies.value) {
-    const gameName = shiny.game || 'Unknown'
+    if (!shiny.nature) {
+      continue
+    }
 
-    counts[gameName] =
-      (counts[gameName] ?? 0) + 1
+    counts[shiny.nature] =
+      (counts[shiny.nature] ?? 0) + 1
   }
 
-  return Object.entries(counts)
-    .map(([game, count]) => ({
-      game,
-      count
-    }))
-    .sort((a, b) => b.count - a.count)
+  const ranking = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+
+  if (ranking.length === 0) {
+    return null
+  }
+
+  return {
+    name: ranking[0][0],
+    count: ranking[0][1]
+  }
+})
+
+const mostUsedBall = computed(() => {
+  const counts = {}
+
+  for (const shiny of shinies.value) {
+    if (!shiny.ball) {
+      continue
+    }
+
+    counts[shiny.ball] =
+      (counts[shiny.ball] ?? 0) + 1
+  }
+
+  const ranking = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+
+  if (ranking.length === 0) {
+    return null
+  }
+
+  return {
+    name: ranking[0][0],
+    count: ranking[0][1]
+  }
+})
+
+const genderBreakdown = computed(() => {
+  const counts = {
+    Male: 0,
+    Female: 0,
+    Genderless: 0,
+    Unknown: 0
+  }
+
+  for (const shiny of shinies.value) {
+    if (shiny.gender === 'Male') {
+      counts.Male++
+    } else if (shiny.gender === 'Female') {
+      counts.Female++
+    } else if (shiny.gender === 'Genderless') {
+      counts.Genderless++
+    } else {
+      counts.Unknown++
+    }
+  }
+
+  return counts
 })
 </script>
 
@@ -219,19 +277,115 @@ const gameBreakdown = computed(() => {
         </RouterLink>
 
         <RouterLink
-  to="/stats/games"
-  class="stat-card stat-link"
->
-  <span class="stat-label">
-    Shinies by Game
-  </span>
+          to="/stats/games"
+          class="stat-card stat-link"
+        >
+          <span class="stat-label">
+            Shinies by Game
+          </span>
 
-  <strong class="stat-number stat-link-text">
-    View Games →
-  </strong>
-</RouterLink>
+          <strong class="stat-number stat-link-text">
+            View Games →
+          </strong>
+        </RouterLink>
+
+        <RouterLink
+          to="/stats/natures"
+          class="stat-card stat-link"
+        >
+          <span class="stat-label">
+            Most Common Nature
+          </span>
+
+          <strong
+            v-if="mostOwnedNature"
+            class="stat-number stat-name"
+          >
+            {{ mostOwnedNature.name }}
+          </strong>
+
+          <span
+            v-if="mostOwnedNature"
+            class="stat-subtext"
+          >
+            {{ mostOwnedNature.count }} shinies
+          </span>
+
+          <span class="view-details">
+            View Nature Ranking →
+          </span>
+        </RouterLink>
+
+        <RouterLink
+          to="/stats/balls"
+          class="stat-card stat-link"
+        >
+          <span class="stat-label">
+            Most Used Ball
+          </span>
+
+          <strong
+            v-if="mostUsedBall"
+            class="stat-number stat-name"
+          >
+            {{ mostUsedBall.name }}
+          </strong>
+
+          <span
+            v-if="mostUsedBall"
+            class="stat-subtext"
+          >
+            {{ mostUsedBall.count }} shinies
+          </span>
+
+          <span class="view-details">
+            View Ball Ranking →
+          </span>
+        </RouterLink>
+
+        <article class="stat-card gender-card">
+          <span class="stat-label">
+            Gender Breakdown
+          </span>
+
+          <div class="gender-list">
+            <div class="gender-row">
+              <span>Male</span>
+
+              <strong>
+                {{ genderBreakdown.Male }}
+              </strong>
+            </div>
+
+            <div class="gender-row">
+              <span>Female</span>
+
+              <strong>
+                {{ genderBreakdown.Female }}
+              </strong>
+            </div>
+
+            <div class="gender-row">
+              <span>Genderless</span>
+
+              <strong>
+                {{ genderBreakdown.Genderless }}
+              </strong>
+            </div>
+
+            <div
+              v-if="genderBreakdown.Unknown > 0"
+              class="gender-row"
+            >
+              <span>Unknown</span>
+
+              <strong>
+                {{ genderBreakdown.Unknown }}
+              </strong>
+            </div>
+          </div>
+        </article>
       </section>
-
     </template>
   </main>
 </template>
@@ -296,8 +450,20 @@ const gameBreakdown = computed(() => {
   color: #111827;
 }
 
+.stat-name {
+  font-size: 1.5rem;
+}
+
+.stat-subtext {
+  display: block;
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
 .stat-link {
   text-decoration: none;
+  color: inherit;
   cursor: pointer;
   transition:
     transform 0.2s ease,
@@ -313,35 +479,42 @@ const gameBreakdown = computed(() => {
   font-size: 1.4rem;
 }
 
-.statistics-section {
-  margin-top: 40px;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
-  padding: 28px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
+.view-details {
+  display: block;
+  margin-top: 12px;
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
-.statistics-section h2 {
-  margin-top: 0;
-}
-
-.game-list {
+.gender-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
-.game-row {
+.gender-list {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gender-row {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 12px 14px;
-  border-radius: 10px;
+
+  padding: 7px 10px;
+
+  border-radius: 8px;
   background: #f9fafb;
 }
 
-.game-row strong {
-  margin-left: auto;
+.gender-row span {
+  color: #374151;
+}
+
+.gender-row strong {
+  color: #111827;
 }
 
 @media (max-width: 600px) {
@@ -365,8 +538,17 @@ const gameBreakdown = computed(() => {
     font-size: 1.4rem;
   }
 
+  .stat-name {
+    font-size: 1.2rem;
+  }
+
   .stat-link-text {
     font-size: 1.1rem;
+  }
+
+  .gender-row {
+    padding: 6px 8px;
+    font-size: 0.85rem;
   }
 }
 </style>
