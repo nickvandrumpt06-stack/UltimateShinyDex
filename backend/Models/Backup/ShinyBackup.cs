@@ -2,9 +2,12 @@ namespace UltimateShinyDex.Api.Models.Backup
 {
     public class ShinyBackup
     {
-        public int Version { get; set; } = 1;
+        public int Version { get; set; } = 2;
         public DateTime ExportedAt { get; set; } = DateTime.UtcNow;
+
         public List<ShinyBackupItem> Shinies { get; set; } = new();
+
+        public List<DisabledDexSlotBackupItem> DisabledDexSlots { get; set; } = new();
     }
 
     public class ShinyBackupItem
@@ -21,5 +24,13 @@ namespace UltimateShinyDex.Api.Models.Backup
         public string? Form { get; set; }
 
         public List<string> Marks { get; set; } = new();
+    }
+
+    public class DisabledDexSlotBackupItem
+    {
+        public int DexNumber { get; set; }
+        public string Pokemon { get; set; } = string.Empty;
+        public string? Form { get; set; }
+        public string? Gender { get; set; }
     }
 }

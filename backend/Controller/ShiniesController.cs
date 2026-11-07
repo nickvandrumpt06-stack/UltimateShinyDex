@@ -34,35 +34,53 @@ namespace UltimateShinyDex.Api.Controllers
                 .Include(shiny => shiny.Marks)
                 .ToListAsync();
 
+            var disabledDexSlots = await _context.DisabledDexSlots
+                .OrderBy(slot => slot.DexNumber)
+                .ToListAsync();
+
             var backup = new ShinyBackup
             {
-                Version = 1,
+                Version = 2,
                 ExportedAt = DateTime.UtcNow,
 
-                Shinies = shinies.Select(shiny => new ShinyBackupItem
-                {
-                    Pokemon = shiny.Pokemon,
-                    Nickname = shiny.Nickname,
-                    Nature = shiny.Nature,
-                    Game = shiny.Game,
-                    Ball = shiny.Ball,
-                    Method = shiny.Method,
-                    Encounters = shiny.Encounters,
-                    IsAlpha = shiny.IsAlpha,
-                    Gender = shiny.Gender,
-                    Form = shiny.Form,
+                Shinies = shinies
+                    .Select(shiny => new ShinyBackupItem
+                    {
+                        Pokemon = shiny.Pokemon,
+                        Nickname = shiny.Nickname,
+                        Nature = shiny.Nature,
+                        Game = shiny.Game,
+                        Ball = shiny.Ball,
+                        Method = shiny.Method,
+                        Encounters = shiny.Encounters,
+                        IsAlpha = shiny.IsAlpha,
+                        Gender = shiny.Gender,
+                        Form = shiny.Form,
 
-                    Marks = shiny.Marks
-                        .Select(mark => mark.MarkName)
-                        .ToList()
-                }).ToList()
+                        Marks = shiny.Marks
+                            .Select(mark => mark.MarkName)
+                            .ToList()
+                    })
+                    .ToList(),
+
+                DisabledDexSlots = disabledDexSlots
+                    .Select(slot => new DisabledDexSlotBackupItem
+                    {
+                        DexNumber = slot.DexNumber,
+                        Pokemon = slot.Pokemon,
+                        Form = slot.Form,
+                        Gender = slot.Gender
+                    })
+                    .ToList()
             };
 
             return Ok(backup);
         }
 
         [HttpPost("import")]
-        public async Task<IActionResult> ImportCollection(ShinyBackup backup)
+        public async Task<IActionResult> ImportCollection(
+            ShinyBackup backup
+        )
         {
             if (backup == null || backup.Shinies == null)
             {
@@ -96,21 +114,63 @@ namespace UltimateShinyDex.Api.Controllers
 
                 foreach (var markName in backupShiny.Marks)
                 {
-                    shiny.Marks.Add(new ShinyMark
-                    {
-                        MarkName = markName
-                    });
+                    shiny.Marks.Add(
+                        new ShinyMark
+                        {
+                            MarkName = markName
+                        }
+                    );
                 }
 
                 _context.Shinies.Add(shiny);
             }
 
+            // Version 2 backups also contain Dex preferences.
+            //
+            // Version 1 backups did not contain these settings.
+            // Importing an old backup therefore leaves the
+            // current Customize Dex settings unchanged.
+            if (backup.Version >= 2)
+            {
+                var existingDisabledSlots =
+                    await _context.DisabledDexSlots
+                        .ToListAsync();
+
+                _context.DisabledDexSlots.RemoveRange(
+                    existingDisabledSlots
+                );
+
+                foreach (
+                    var backupSlot in
+                        backup.DisabledDexSlots
+                        ?? new List<DisabledDexSlotBackupItem>()
+                )
+                {
+                    _context.DisabledDexSlots.Add(
+                        new DisabledDexSlot
+                        {
+                            DexNumber = backupSlot.DexNumber,
+                            Pokemon = backupSlot.Pokemon,
+                            Form = backupSlot.Form,
+                            Gender = backupSlot.Gender
+                        }
+                    );
+                }
+            }
+
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                imported = backup.Shinies.Count
-            });
+            return Ok(
+                new
+                {
+                    imported = backup.Shinies.Count,
+
+                    disabledDexSlots =
+                        backup.Version >= 2
+                            ? backup.DisabledDexSlots?.Count ?? 0
+                            : (int?)null
+                }
+            );
         }
 
         [HttpDelete("all")]
@@ -132,7 +192,9 @@ namespace UltimateShinyDex.Api.Controllers
         {
             var shiny = await _context.Shinies
                 .Include(shiny => shiny.Marks)
-                .FirstOrDefaultAsync(shiny => shiny.Id == id);
+                .FirstOrDefaultAsync(
+                    shiny => shiny.Id == id
+                );
 
             if (shiny == null)
             {
@@ -143,7 +205,9 @@ namespace UltimateShinyDex.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Shiny>> AddShiny(Shiny shiny)
+        public async Task<ActionResult<Shiny>> AddShiny(
+            Shiny shiny
+        )
         {
             _context.Shinies.Add(shiny);
 
@@ -160,7 +224,9 @@ namespace UltimateShinyDex.Api.Controllers
         {
             var shiny = await _context.Shinies
                 .Include(shiny => shiny.Marks)
-                .FirstOrDefaultAsync(shiny => shiny.Id == id);
+                .FirstOrDefaultAsync(
+                    shiny => shiny.Id == id
+                );
 
             if (shiny == null)
             {
@@ -182,10 +248,12 @@ namespace UltimateShinyDex.Api.Controllers
 
             foreach (var updatedMark in updatedShiny.Marks)
             {
-                shiny.Marks.Add(new ShinyMark
-                {
-                    MarkName = updatedMark.MarkName
-                });
+                shiny.Marks.Add(
+                    new ShinyMark
+                    {
+                        MarkName = updatedMark.MarkName
+                    }
+                );
             }
 
             await _context.SaveChangesAsync();
@@ -199,7 +267,8 @@ namespace UltimateShinyDex.Api.Controllers
             IFormFile file
         )
         {
-            var shiny = await _context.Shinies.FindAsync(id);
+            var shiny = await _context.Shinies
+                .FindAsync(id);
 
             if (shiny == null)
             {
@@ -218,9 +287,12 @@ namespace UltimateShinyDex.Api.Controllers
                 "shinies"
             );
 
-            Directory.CreateDirectory(uploadsFolder);
+            Directory.CreateDirectory(
+                uploadsFolder
+            );
 
-            var extension = Path.GetExtension(file.FileName);
+            var extension =
+                Path.GetExtension(file.FileName);
 
             var fileName =
                 $"shiny-{id}-{Guid.NewGuid()}{extension}";
@@ -230,10 +302,12 @@ namespace UltimateShinyDex.Api.Controllers
                 fileName
             );
 
-            using (var stream = new FileStream(
-                filePath,
-                FileMode.Create
-            ))
+            using (
+                var stream = new FileStream(
+                    filePath,
+                    FileMode.Create
+                )
+            )
             {
                 await file.CopyToAsync(stream);
             }
@@ -243,16 +317,22 @@ namespace UltimateShinyDex.Api.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                spritePath = shiny.CustomSpritePath
-            });
+            return Ok(
+                new
+                {
+                    spritePath =
+                        shiny.CustomSpritePath
+                }
+            );
         }
 
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteShiny(int id)
+        public async Task<IActionResult> DeleteShiny(
+            int id
+        )
         {
-            var shiny = await _context.Shinies.FindAsync(id);
+            var shiny = await _context.Shinies
+                .FindAsync(id);
 
             if (shiny == null)
             {
