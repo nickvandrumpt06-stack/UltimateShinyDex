@@ -9,6 +9,7 @@ import DexCard from '../components/DexCard.vue'
 const route = useRoute()
 
 const shinies = ref([])
+const disabledSlots = ref([])
 const search = ref('')
 const currentPage = ref(1)
 
@@ -21,6 +22,12 @@ const selectedGeneration = ref('')
 const showFilters = ref(false)
 
 const itemsPerPage = 60
+
+const activeDexEntries = computed(() => {
+  return dexEntries.value.filter(
+    (entry) => !isDexSlotDisabled(entry)
+  )
+})
 
 watch(currentPage, () => {
   window.scrollTo({
@@ -38,6 +45,7 @@ async function loadShinies() {
 
 onMounted(() => {
   loadShinies()
+  loadDisabledSlots()
 })
 
 const selectedGameGroup = computed(() => {
@@ -94,9 +102,20 @@ function getGeneration(dexNumber) {
   return 9
 }
 
+function isDexSlotDisabled(entry) {
+  return disabledSlots.value.some((slot) => {
+    return (
+      slot.dexNumber === entry.dexNumber &&
+      slot.pokemon === entry.name &&
+      (slot.form ?? null) === (entry.form ?? null) &&
+      (slot.gender ?? null) === (entry.gender ?? null)
+    )
+  })
+}
+
 const filteredDexEntries = computed(() => {
-  return dexEntries.value
-    .map((entry) => {
+  return activeDexEntries.value
+  .map((entry) => {
       const matchesSearch =
         entry.name
           .toLowerCase()
@@ -202,7 +221,7 @@ const paginatedDexEntries = computed(() => {
 })
 
 const obtainedCount = computed(() => {
-  return dexEntries.value.filter(
+  return activeDexEntries.value.filter(
     (entry) => entry.obtained
   ).length
 })
@@ -212,12 +231,15 @@ const totalShinyCount = computed(() => {
 })
 
 const progressPercentage = computed(() => {
-  if (dexEntries.value.length === 0) {
+  if (activeDexEntries.value.length === 0) {
     return 0
   }
 
   return Math.round(
-    (obtainedCount.value / dexEntries.value.length) * 100
+    (
+      obtainedCount.value /
+      activeDexEntries.value.length
+    ) * 100
   )
 })
 
@@ -255,6 +277,14 @@ function clearFilters() {
   selectedGeneration.value = ''
   search.value = ''
   currentPage.value = 1
+}
+
+async function loadDisabledSlots() {
+  const response = await fetch(
+    'http://localhost:5119/api/dex-preferences/disabled'
+  )
+
+  disabledSlots.value = await response.json()
 }
 
 function previousPage() {
@@ -307,8 +337,8 @@ watch(
           <span>Living Dex Progress</span>
 
           <span>
-            {{ obtainedCount }} / {{ dexEntries.length }}
-            — {{ progressPercentage }}%
+            {{ obtainedCount }} / {{ activeDexEntries.length }}
+— {{ progressPercentage }}%
           </span>
         </div>
 

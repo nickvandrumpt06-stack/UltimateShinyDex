@@ -4,12 +4,15 @@ import { RouterLink } from 'vue-router'
 import { pokemonDex } from '../data/pokedex'
 
 const shinies = ref([])
+const disabledSlots = ref([])
 const isLoading = ref(true)
 const errorMessage = ref('')
 
 async function loadShinies() {
   try {
-    const response = await fetch('http://localhost:5119/api/shinies')
+    const response = await fetch(
+      'http://localhost:5119/api/shinies'
+    )
 
     if (!response.ok) {
       throw new Error('Loading shinies failed')
@@ -18,22 +21,93 @@ async function loadShinies() {
     shinies.value = await response.json()
   } catch (error) {
     console.error(error)
+
     errorMessage.value =
       'Could not load collection statistics.'
-  } finally {
-    isLoading.value = false
   }
 }
 
+async function loadDisabledSlots() {
+  try {
+    const response = await fetch(
+      'http://localhost:5119/api/dex-preferences/disabled'
+    )
+
+    if (!response.ok) {
+      throw new Error('Loading Dex preferences failed')
+    }
+
+    disabledSlots.value = await response.json()
+  } catch (error) {
+    console.error(error)
+
+    errorMessage.value =
+      'Could not load collection statistics.'
+  }
+}
+
+async function loadStatistics() {
+  isLoading.value = true
+
+  await Promise.all([
+    loadShinies(),
+    loadDisabledSlots()
+  ])
+
+  isLoading.value = false
+}
+
 onMounted(() => {
-  loadShinies()
+  loadStatistics()
 })
+
+function isDexSlotDisabled(entry) {
+  return disabledSlots.value.some((slot) => {
+    return (
+      slot.dexNumber === entry.dexNumber &&
+      slot.pokemon === entry.name &&
+      (slot.form ?? null) === (entry.form ?? null) &&
+      (slot.gender ?? null) === (entry.gender ?? null)
+    )
+  })
+}
 
 const totalShinies = computed(() => {
   return shinies.value.length
 })
 
+const activePokemonDex = computed(() => {
+  return pokemonDex.filter(
+    (entry) => !isDexSlotDisabled(entry)
+  )
+})
+
 const obtainedDexSlots = computed(() => {
+  return activePokemonDex.value.filter((pokemon) => {
+    return shinies.value.some((shiny) => {
+      const samePokemon =
+        shiny.pokemon.toLowerCase() ===
+        pokemon.name.toLowerCase()
+
+      if (!samePokemon) {
+        return false
+      }
+
+      const sameGender =
+        !pokemon.gender ||
+        shiny.gender === pokemon.gender
+
+      const sameForm =
+        !pokemon.form
+          ? !shiny.form
+          : shiny.form === pokemon.form
+
+      return sameGender && sameForm
+    })
+  }).length
+})
+
+const obtainedAllDexSlots = computed(() => {
   return pokemonDex.filter((pokemon) => {
     return shinies.value.some((shiny) => {
       const samePokemon =
@@ -59,18 +133,21 @@ const obtainedDexSlots = computed(() => {
 })
 
 const completionPercentage = computed(() => {
-  if (pokemonDex.length === 0) {
+  if (activePokemonDex.value.length === 0) {
     return 0
   }
 
   return Math.round(
-    (obtainedDexSlots.value / pokemonDex.length) * 100
+    (
+      obtainedDexSlots.value /
+      activePokemonDex.value.length
+    ) * 100
   )
 })
 
 const duplicateCount = computed(() => {
   return Math.max(
-    totalShinies.value - obtainedDexSlots.value,
+    totalShinies.value - obtainedAllDexSlots.value,
     0
   )
 })
@@ -209,7 +286,7 @@ const genderBreakdown = computed(() => {
           </span>
 
           <strong class="stat-number">
-            {{ obtainedDexSlots }} / {{ pokemonDex.length }}
+            {{ obtainedDexSlots }} / {{ activePokemonDex.length }}
           </strong>
         </article>
 

@@ -40,7 +40,14 @@ export const pokemonDex = [
 
   { dexNumber: 25, name: 'Pikachu', gender: 'Male' },
   { dexNumber: 25, name: 'Pikachu', gender: 'Female' },
-  { dexNumber: 25, name: 'Pikachu', form: 'Partner Cap' },
+{ dexNumber: 25, name: 'Pikachu', form: 'Original Cap' },
+{ dexNumber: 25, name: 'Pikachu', form: 'Hoenn Cap' },
+{ dexNumber: 25, name: 'Pikachu', form: 'Sinnoh Cap' },
+{ dexNumber: 25, name: 'Pikachu', form: 'Unova Cap' },
+{ dexNumber: 25, name: 'Pikachu', form: 'Kalos Cap' },
+{ dexNumber: 25, name: 'Pikachu', form: 'Alola Cap' },
+{ dexNumber: 25, name: 'Pikachu', form: 'Partner Cap' },
+{ dexNumber: 25, name: 'Pikachu', form: 'World Cap' },
   { dexNumber: 26, name: 'Raichu', gender: 'Male' },
   { dexNumber: 26, name: 'Raichu', gender: 'Female' },
   { dexNumber: 26, name: 'Raichu', form: 'Alolan' },
@@ -1272,6 +1279,7 @@ export const pokemonDex = [
   { dexNumber: 666, name: 'Vivillon', form: 'Ocean Pattern' },
   { dexNumber: 666, name: 'Vivillon', form: 'Jungle Pattern' },
   { dexNumber: 666, name: 'Vivillon', form: 'Fancy Pattern' },
+  { dexNumber: 666, name: 'Vivillon', form: 'Poké Ball Pattern' },
 
   { dexNumber: 667, name: 'Litleo' },
   { dexNumber: 668, name: 'Pyroar', gender: 'Male' },
@@ -1535,6 +1543,7 @@ export const pokemonDex = [
   { dexNumber: 800, name: 'Necrozma' },
 
   { dexNumber: 801, name: 'Magearna' },
+  { dexNumber: 801, name: 'Magearna', form: 'Original Color' },
 
   { dexNumber: 802, name: 'Marshadow' },
 
@@ -1756,6 +1765,7 @@ export const pokemonDex = [
   { dexNumber: 892, name: 'Urshifu', form: 'Rapid Strike Style' },
 
   { dexNumber: 893, name: 'Zarude' },
+  { dexNumber: 893, name: 'Zarude', form: 'Dada' },
 
   { dexNumber: 894, name: 'Regieleki' },
 
@@ -1941,6 +1951,7 @@ export const pokemonDex = [
   { dexNumber: 998, name: 'Baxcalibur' },
 
   { dexNumber: 999, name: 'Gimmighoul', form: 'Chest Form' },
+  { dexNumber: 999, name: 'Gimmighoul', form: 'Roaming Form' },
   { dexNumber: 1000, name: 'Gholdengo' },
 
   { dexNumber: 1001, name: 'Wo-Chien' },

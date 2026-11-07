@@ -9,6 +9,7 @@ import MostOwnedView from '../views/MostOwnedView.vue'
 import GameStatsView from '../views/GameStatsView.vue'
 import NatureStatsView from '../views/NatureStatsView.vue'
 import BallStatsView from '../views/BallStatsView.vue'
+import DexSettingsView from '../views/DexSettingsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -58,6 +59,11 @@ const router = createRouter({
   path: '/stats/balls',
   name: 'ball-stats',
   component: BallStatsView
+},
+{
+  path: '/dex-settings',
+  name: 'dex-settings',
+  component: DexSettingsView
 },
   ]
 })

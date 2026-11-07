@@ -21,6 +21,36 @@ namespace UltimateShinyDex.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("UltimateShinyDex.Api.Models.DisabledDexSlot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DexNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Form")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Gender")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Pokemon")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DexNumber", "Pokemon", "Form", "Gender")
+                        .IsUnique()
+                        .HasFilter("[Form] IS NOT NULL AND [Gender] IS NOT NULL");
+
+                    b.ToTable("DisabledDexSlots");
+                });
+
             modelBuilder.Entity("UltimateShinyDex.Api.Models.Shiny", b =>
                 {
                     b.Property<int>("Id")

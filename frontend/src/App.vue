@@ -12,6 +12,9 @@ import { RouterLink, RouterView } from 'vue-router'
   <RouterLink to="/add">Add Shiny</RouterLink>
   <RouterLink to="/stats">Stats</RouterLink>
   <RouterLink to="/backup">Backup</RouterLink>
+  <RouterLink to="/dex-settings">
+  Customize Dex
+</RouterLink>
 </nav>
     </div>
   </header>

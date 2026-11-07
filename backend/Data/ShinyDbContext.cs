@@ -12,6 +12,8 @@ namespace UltimateShinyDex.Api.Data
 
         public DbSet<Shiny> Shinies { get; set; }
 
+        public DbSet<DisabledDexSlot> DisabledDexSlots { get; set; }
+
         public DbSet<ShinyMark> ShinyMarks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -23,6 +25,16 @@ namespace UltimateShinyDex.Api.Data
                 .WithMany(shiny => shiny.Marks)
                 .HasForeignKey(mark => mark.ShinyId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+                modelBuilder.Entity<DisabledDexSlot>()
+    .HasIndex(d => new
+    {
+        d.DexNumber,
+        d.Pokemon,
+        d.Form,
+        d.Gender
+    })
+    .IsUnique();
         }
     }
 }
