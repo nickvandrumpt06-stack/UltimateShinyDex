@@ -10,6 +10,7 @@ import GameStatsView from '../views/GameStatsView.vue'
 import NatureStatsView from '../views/NatureStatsView.vue'
 import BallStatsView from '../views/BallStatsView.vue'
 import DexSettingsView from '../views/DexSettingsView.vue'
+import HuntsView from '../views/HuntsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -64,6 +65,16 @@ const router = createRouter({
   path: '/dex-settings',
   name: 'dex-settings',
   component: DexSettingsView
+},
+{
+  path: '/hunts',
+  name: 'hunts',
+  component: HuntsView
+},
+{
+  path: '/hunts/new',
+  name: 'create-hunt',
+  component: () => import('../views/CreateHuntView.vue')
 },
   ]
 })

@@ -130,35 +130,37 @@ namespace UltimateShinyDex.Api.Controllers
             // Version 1 backups did not contain these settings.
             // Importing an old backup therefore leaves the
             // current Customize Dex settings unchanged.
-            if (backup.Version >= 2)
+        
+        if (backup.Version >= 2)
+{
+    var existingDisabledSlots =
+        await _context.DisabledDexSlots.ToListAsync();
+
+    _context.DisabledDexSlots.RemoveRange(
+        existingDisabledSlots
+    );
+
+    // First save the removal of the old Dex preferences.
+    await _context.SaveChangesAsync();
+
+    foreach (
+        var backupSlot in backup.DisabledDexSlots
+            ?? new List<DisabledDexSlotBackupItem>()
+    )
+    {
+        _context.DisabledDexSlots.Add(
+            new DisabledDexSlot
             {
-                var existingDisabledSlots =
-                    await _context.DisabledDexSlots
-                        .ToListAsync();
-
-                _context.DisabledDexSlots.RemoveRange(
-                    existingDisabledSlots
-                );
-
-                foreach (
-                    var backupSlot in
-                        backup.DisabledDexSlots
-                        ?? new List<DisabledDexSlotBackupItem>()
-                )
-                {
-                    _context.DisabledDexSlots.Add(
-                        new DisabledDexSlot
-                        {
-                            DexNumber = backupSlot.DexNumber,
-                            Pokemon = backupSlot.Pokemon,
-                            Form = backupSlot.Form,
-                            Gender = backupSlot.Gender
-                        }
-                    );
-                }
+                DexNumber = backupSlot.DexNumber,
+                Pokemon = backupSlot.Pokemon,
+                Form = backupSlot.Form,
+                Gender = backupSlot.Gender
             }
+        );
+    }
+}
 
-            await _context.SaveChangesAsync();
+await _context.SaveChangesAsync();
 
             return Ok(
                 new

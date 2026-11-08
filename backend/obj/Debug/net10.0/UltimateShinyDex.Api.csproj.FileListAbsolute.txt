@@ -364,3 +364,6 @@ C:\Users\Nick van Drumpt\source\repos\UltimateShinyDex\backend\obj\Debug\net10.0
 C:\Users\Nick van Drumpt\source\repos\UltimateShinyDex\backend\obj\Debug\net10.0\UltimateShinyDex.Api.pdb
 C:\Users\Nick van Drumpt\source\repos\UltimateShinyDex\backend\obj\Debug\net10.0\UltimateShinyDex.Api.genruntimeconfig.cache
 C:\Users\Nick van Drumpt\source\repos\UltimateShinyDex\backend\obj\Debug\net10.0\ref\UltimateShinyDex.Api.dll
+C:\Users\Nick van Drumpt\source\repos\UltimateShinyDex\backend\bin\Debug\net10.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\Nick van Drumpt\source\repos\UltimateShinyDex\backend\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\Nick van Drumpt\source\repos\UltimateShinyDex\backend\bin\Debug\net10.0\Swashbuckle.AspNetCore.SwaggerUI.dll
