@@ -11,6 +11,7 @@ import NatureStatsView from '../views/NatureStatsView.vue'
 import BallStatsView from '../views/BallStatsView.vue'
 import DexSettingsView from '../views/DexSettingsView.vue'
 import HuntsView from '../views/HuntsView.vue'
+import HuntDetailView from '../views/HuntDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -75,6 +76,17 @@ const router = createRouter({
   path: '/hunts/new',
   name: 'create-hunt',
   component: () => import('../views/CreateHuntView.vue')
+},
+{
+  path: '/hunts/:id/shiny-found',
+  name: 'shiny-found',
+  component: () =>
+    import('../views/ShinyFoundView.vue')
+},
+{
+  path: '/hunts/:id',
+  name: 'hunt-detail',
+  component: HuntDetailView
 },
   ]
 })
