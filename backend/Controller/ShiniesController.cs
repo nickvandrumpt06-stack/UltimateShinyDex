@@ -27,153 +27,513 @@ namespace UltimateShinyDex.Api.Controllers
             return Ok(shinies);
         }
 
-        [HttpGet("export")]
-        public async Task<ActionResult<ShinyBackup>> ExportCollection()
-        {
-            var shinies = await _context.Shinies
-                .Include(shiny => shiny.Marks)
-                .ToListAsync();
+[HttpGet("export")]
+public async Task<ActionResult<ShinyBackup>> ExportCollection()
+{
+    var shinies = await _context.Shinies
+        .Include(shiny => shiny.Marks)
+        .ToListAsync();
 
-            var disabledDexSlots = await _context.DisabledDexSlots
-                .OrderBy(slot => slot.DexNumber)
-                .ToListAsync();
+    var disabledDexSlots = await _context.DisabledDexSlots
+        .OrderBy(slot => slot.DexNumber)
+        .ToListAsync();
 
-            var backup = new ShinyBackup
+    var hunts = await _context.Hunts
+        .Include(hunt => hunt.Games)
+            .ThenInclude(game => game.Encounters)
+        .Include(hunt => hunt.Targets)
+        .Include(hunt => hunt.Phases)
+            .ThenInclude(phase => phase.FoundShiny)
+        .OrderBy(hunt => hunt.StartedAt)
+        .ToListAsync();
+
+    var backup = new ShinyBackup
+    {
+        Version = 3,
+        ExportedAt = DateTime.UtcNow,
+
+        Shinies = shinies
+            .Select(shiny => new ShinyBackupItem
             {
-                Version = 2,
-                ExportedAt = DateTime.UtcNow,
+                SourceId = shiny.Id,
 
-                Shinies = shinies
-                    .Select(shiny => new ShinyBackupItem
+                Pokemon = shiny.Pokemon,
+                Nickname = shiny.Nickname,
+                Nature = shiny.Nature,
+                Game = shiny.Game,
+                Ball = shiny.Ball,
+                Method = shiny.Method,
+                Encounters = shiny.Encounters,
+                IsAlpha = shiny.IsAlpha,
+                Gender = shiny.Gender,
+                Form = shiny.Form,
+
+                Marks = shiny.Marks
+                    .Select(mark => mark.MarkName)
+                    .ToList()
+            })
+            .ToList(),
+
+        DisabledDexSlots = disabledDexSlots
+            .Select(slot => new DisabledDexSlotBackupItem
+            {
+                DexNumber = slot.DexNumber,
+                Pokemon = slot.Pokemon,
+                Form = slot.Form,
+                Gender = slot.Gender
+            })
+            .ToList(),
+
+        Hunts = hunts
+            .Select(hunt => new HuntBackupItem
+            {
+                Name = hunt.Name,
+                Status = hunt.Status,
+                UsesCounter = hunt.UsesCounter,
+                CounterStep = hunt.CounterStep,
+                CurrentEncounters = hunt.CurrentEncounters,
+                TotalEncounters = hunt.TotalEncounters,
+                CurrentPhaseNumber = hunt.CurrentPhaseNumber,
+                StartedAt = hunt.StartedAt,
+                CompletedAt = hunt.CompletedAt,
+                Notes = hunt.Notes,
+
+                Games = hunt.Games
+                    .Select(game => new HuntGameBackupItem
                     {
-                        Pokemon = shiny.Pokemon,
-                        Nickname = shiny.Nickname,
-                        Nature = shiny.Nature,
-                        Game = shiny.Game,
-                        Ball = shiny.Ball,
-                        Method = shiny.Method,
-                        Encounters = shiny.Encounters,
-                        IsAlpha = shiny.IsAlpha,
-                        Gender = shiny.Gender,
-                        Form = shiny.Form,
+                        Game = game.Game,
+                        Label = game.Label,
+                        ShinyOdds = game.ShinyOdds,
 
-                        Marks = shiny.Marks
-                            .Select(mark => mark.MarkName)
+                        Encounters = game.Encounters
+                            .Select(encounter => new HuntEncounterBackupItem
+                            {
+                                Pokemon = encounter.Pokemon,
+                                Form = encounter.Form,
+                                EncounterPercentage =
+                                    encounter.EncounterPercentage
+                            })
                             .ToList()
                     })
                     .ToList(),
 
-                DisabledDexSlots = disabledDexSlots
-                    .Select(slot => new DisabledDexSlotBackupItem
+                Targets = hunt.Targets
+                    .Select(target => new HuntTargetBackupItem
                     {
-                        DexNumber = slot.DexNumber,
-                        Pokemon = slot.Pokemon,
-                        Form = slot.Form,
-                        Gender = slot.Gender
+                        Pokemon = target.Pokemon,
+                        Form = target.Form,
+                        Gender = target.Gender,
+                        Nature = target.Nature,
+                        IsAlpha = target.IsAlpha,
+                        Mark = target.Mark
+                    })
+                    .ToList(),
+
+                Phases = hunt.Phases
+                    .OrderBy(phase => phase.PhaseNumber)
+                    .Select(phase => new HuntPhaseBackupItem
+                    {
+                        PhaseNumber = phase.PhaseNumber,
+                        Encounters = phase.Encounters,
+
+                        FoundShinySourceId =
+                            phase.FoundShinyId,
+
+                        WasTarget = phase.WasTarget,
+                        CompletedAt = phase.CompletedAt
                     })
                     .ToList()
-            };
+            })
+            .ToList()
+    };
 
-            return Ok(backup);
-        }
+    return Ok(backup);
+}
 
         [HttpPost("import")]
-        public async Task<IActionResult> ImportCollection(
-            ShinyBackup backup
-        )
-        {
-            if (backup == null || backup.Shinies == null)
-            {
-                return BadRequest("Invalid backup file.");
-            }
+public async Task<IActionResult> ImportCollection(
+    ShinyBackup backup
+)
+{
+    if (
+        backup == null ||
+        backup.Shinies == null
+    )
+    {
+        return BadRequest(
+            "Invalid backup file."
+        );
+    }
 
-            var existingShinies = await _context.Shinies
+    await using var transaction =
+        await _context.Database
+            .BeginTransactionAsync();
+
+    try
+    {
+        // Version 3 contains the complete hunt history.
+        //
+        // Therefore, importing a v3 backup replaces the
+        // current hunts with the hunts from the backup.
+        if (backup.Version >= 3)
+        {
+            var existingHunts =
+                await _context.Hunts
+                    .ToListAsync();
+
+            _context.Hunts.RemoveRange(
+                existingHunts
+            );
+
+            // Hunt -> Games / Encounters / Targets / Phases
+            // are cascade relationships.
+            await _context.SaveChangesAsync();
+        }
+
+        // Remove the current shiny collection.
+        var existingShinies =
+            await _context.Shinies
                 .Include(shiny => shiny.Marks)
                 .ToListAsync();
 
-            _context.Shinies.RemoveRange(existingShinies);
+        _context.Shinies.RemoveRange(
+            existingShinies
+        );
 
-            foreach (var backupShiny in backup.Shinies)
+        await _context.SaveChangesAsync();
+
+        // Maps old shiny IDs stored in the backup
+        // to the newly created EF entities.
+        var shinyMap =
+            new Dictionary<int, Shiny>();
+
+        foreach (
+            var backupShiny
+            in backup.Shinies
+        )
+        {
+            var shiny = new Shiny
             {
-                var shiny = new Shiny
-                {
-                    Pokemon = backupShiny.Pokemon,
-                    Nickname = backupShiny.Nickname,
-                    Nature = backupShiny.Nature,
-                    Game = backupShiny.Game,
-                    Ball = backupShiny.Ball,
-                    Method = backupShiny.Method,
-                    Encounters = backupShiny.Encounters,
-                    IsAlpha = backupShiny.IsAlpha,
-                    Gender = backupShiny.Gender,
-                    Form = backupShiny.Form,
+                Pokemon =
+                    backupShiny.Pokemon,
 
-                    // Custom images intentionally do not transfer.
-                    CustomSpritePath = null
+                Nickname =
+                    backupShiny.Nickname,
+
+                Nature =
+                    backupShiny.Nature,
+
+                Game =
+                    backupShiny.Game,
+
+                Ball =
+                    backupShiny.Ball,
+
+                Method =
+                    backupShiny.Method,
+
+                Encounters =
+                    backupShiny.Encounters,
+
+                IsAlpha =
+                    backupShiny.IsAlpha,
+
+                Gender =
+                    backupShiny.Gender,
+
+                Form =
+                    backupShiny.Form,
+
+                // Custom uploaded sprite files are not
+                // currently included in JSON backups.
+                CustomSpritePath = null
+            };
+
+            foreach (
+                var markName
+                in backupShiny.Marks
+                    ?? new List<string>()
+            )
+            {
+                shiny.Marks.Add(
+                    new ShinyMark
+                    {
+                        MarkName =
+                            markName
+                    }
+                );
+            }
+
+            _context.Shinies.Add(
+                shiny
+            );
+
+            if (
+                backup.Version >= 3 &&
+                backupShiny.SourceId > 0
+            )
+            {
+                shinyMap[
+                    backupShiny.SourceId
+                ] = shiny;
+            }
+        }
+
+        // Version 2+ backups contain Customize Dex
+        // preferences.
+        //
+        // Version 1 did not, so old backups leave
+        // current Dex preferences unchanged.
+        if (backup.Version >= 2)
+        {
+            var existingDisabledSlots =
+                await _context
+                    .DisabledDexSlots
+                    .ToListAsync();
+
+            _context
+                .DisabledDexSlots
+                .RemoveRange(
+                    existingDisabledSlots
+                );
+
+            await _context.SaveChangesAsync();
+
+            foreach (
+                var backupSlot
+                in backup.DisabledDexSlots
+                    ?? new List<DisabledDexSlotBackupItem>()
+            )
+            {
+                _context.DisabledDexSlots.Add(
+                    new DisabledDexSlot
+                    {
+                        DexNumber =
+                            backupSlot.DexNumber,
+
+                        Pokemon =
+                            backupSlot.Pokemon,
+
+                        Form =
+                            backupSlot.Form,
+
+                        Gender =
+                            backupSlot.Gender
+                    }
+                );
+            }
+        }
+
+        // Version 3 backups also contain hunts.
+        if (backup.Version >= 3)
+        {
+            foreach (
+                var backupHunt
+                in backup.Hunts
+                    ?? new List<HuntBackupItem>()
+            )
+            {
+                var hunt = new Hunt
+                {
+                    Name =
+                        backupHunt.Name,
+
+                    Status =
+                        backupHunt.Status,
+
+                    UsesCounter =
+                        backupHunt.UsesCounter,
+
+                    CounterStep =
+                        backupHunt.CounterStep,
+
+                    CurrentEncounters =
+                        backupHunt.CurrentEncounters,
+
+                    TotalEncounters =
+                        backupHunt.TotalEncounters,
+
+                    CurrentPhaseNumber =
+                        backupHunt.CurrentPhaseNumber,
+
+                    StartedAt =
+                        backupHunt.StartedAt,
+
+                    CompletedAt =
+                        backupHunt.CompletedAt,
+
+                    Notes =
+                        backupHunt.Notes
                 };
 
-                foreach (var markName in backupShiny.Marks)
+                foreach (
+                    var backupGame
+                    in backupHunt.Games
+                        ?? new List<HuntGameBackupItem>()
+                )
                 {
-                    shiny.Marks.Add(
-                        new ShinyMark
+                    var game =
+                        new HuntGame
                         {
-                            MarkName = markName
+                            Game =
+                                backupGame.Game,
+
+                            Label =
+                                backupGame.Label,
+
+                            ShinyOdds =
+                                backupGame.ShinyOdds
+                        };
+
+                    foreach (
+                        var backupEncounter
+                        in backupGame.Encounters
+                            ?? new List<HuntEncounterBackupItem>()
+                    )
+                    {
+                        game.Encounters.Add(
+                            new HuntEncounter
+                            {
+                                Pokemon =
+                                    backupEncounter.Pokemon,
+
+                                Form =
+                                    backupEncounter.Form,
+
+                                EncounterPercentage =
+                                    backupEncounter
+                                        .EncounterPercentage
+                            }
+                        );
+                    }
+
+                    hunt.Games.Add(
+                        game
+                    );
+                }
+
+                foreach (
+                    var backupTarget
+                    in backupHunt.Targets
+                        ?? new List<HuntTargetBackupItem>()
+                )
+                {
+                    hunt.Targets.Add(
+                        new HuntTarget
+                        {
+                            Pokemon =
+                                backupTarget.Pokemon,
+
+                            Form =
+                                backupTarget.Form,
+
+                            Gender =
+                                backupTarget.Gender,
+
+                            Nature =
+                                backupTarget.Nature,
+
+                            IsAlpha =
+                                backupTarget.IsAlpha,
+
+                            Mark =
+                                backupTarget.Mark
                         }
                     );
                 }
 
-                _context.Shinies.Add(shiny);
+                foreach (
+                    var backupPhase
+                    in backupHunt.Phases
+                        ?? new List<HuntPhaseBackupItem>()
+                )
+                {
+                    Shiny? foundShiny =
+                        null;
+
+                    if (
+                        backupPhase
+                            .FoundShinySourceId
+                            .HasValue
+                    )
+                    {
+                        shinyMap.TryGetValue(
+                            backupPhase
+                                .FoundShinySourceId
+                                .Value,
+
+                            out foundShiny
+                        );
+                    }
+
+                    hunt.Phases.Add(
+                        new HuntPhase
+                        {
+                            PhaseNumber =
+                                backupPhase.PhaseNumber,
+
+                            Encounters =
+                                backupPhase.Encounters,
+
+                            FoundShiny =
+                                foundShiny,
+
+                            WasTarget =
+                                backupPhase.WasTarget,
+
+                            CompletedAt =
+                                backupPhase.CompletedAt
+                        }
+                    );
+                }
+
+                _context.Hunts.Add(
+                    hunt
+                );
             }
+        }
 
-            // Version 2 backups also contain Dex preferences.
-            //
-            // Version 1 backups did not contain these settings.
-            // Importing an old backup therefore leaves the
-            // current Customize Dex settings unchanged.
-        
-        if (backup.Version >= 2)
-{
-    var existingDisabledSlots =
-        await _context.DisabledDexSlots.ToListAsync();
+        await _context.SaveChangesAsync();
 
-    _context.DisabledDexSlots.RemoveRange(
-        existingDisabledSlots
-    );
+        await transaction.CommitAsync();
 
-    // First save the removal of the old Dex preferences.
-    await _context.SaveChangesAsync();
-
-    foreach (
-        var backupSlot in backup.DisabledDexSlots
-            ?? new List<DisabledDexSlotBackupItem>()
-    )
-    {
-        _context.DisabledDexSlots.Add(
-            new DisabledDexSlot
+        return Ok(
+            new
             {
-                DexNumber = backupSlot.DexNumber,
-                Pokemon = backupSlot.Pokemon,
-                Form = backupSlot.Form,
-                Gender = backupSlot.Gender
+                version =
+                    backup.Version,
+
+                importedShinies =
+                    backup.Shinies.Count,
+
+                disabledDexSlots =
+                    backup.Version >= 2
+                        ? backup
+                            .DisabledDexSlots
+                            ?.Count ?? 0
+                        : (int?)null,
+
+                importedHunts =
+                    backup.Version >= 3
+                        ? backup.Hunts?.Count ?? 0
+                        : (int?)null
             }
         );
     }
+    catch (Exception error)
+    {
+        await transaction.RollbackAsync();
+
+        Console.WriteLine(
+            error
+        );
+
+        return StatusCode(
+            500,
+            "Something went wrong while importing the backup."
+        );
+    }
 }
-
-await _context.SaveChangesAsync();
-
-            return Ok(
-                new
-                {
-                    imported = backup.Shinies.Count,
-
-                    disabledDexSlots =
-                        backup.Version >= 2
-                            ? backup.DisabledDexSlots?.Count ?? 0
-                            : (int?)null
-                }
-            );
-        }
 
         [HttpDelete("all")]
         public async Task<IActionResult> DeleteAllShinies()

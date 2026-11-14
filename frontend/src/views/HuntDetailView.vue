@@ -146,12 +146,11 @@ function getPokemonSprite({
     return `http://localhost:5119${customSpritePath}`
   }
 
-  const dexEntry =
-    findDexEntry(
-      pokemon,
-      form,
-      gender
-    )
+  const dexEntry = findDexEntry(
+    pokemon,
+    form,
+    gender
+  )
 
   if (!dexEntry?.dexNumber) {
     return null
@@ -171,7 +170,18 @@ function getPokemonSprite({
     return formSprites[formSpriteKey]
   }
 
-  if (gender === 'Female') {
+  const hasFemaleDexSlot =
+    gender === 'Female' &&
+    pokemonDex.some(
+      (entry) =>
+        normalizeValue(entry.name) ===
+          normalizeValue(pokemon) &&
+        normalizeValue(entry.form) ===
+          normalizeValue(form) &&
+        entry.gender === 'Female'
+    )
+
+  if (hasFemaleDexSlot) {
     return shinyFemale(
       dexEntry.dexNumber
     )
