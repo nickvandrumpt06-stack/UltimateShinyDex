@@ -26,12 +26,56 @@ const isLoading = ref(true)
 const errorMessage = ref('')
 
 const isUpdatingCounter = ref(false)
+const isDeleting = ref(false)
 const counterStepInput = ref(1)
 
 function normalizeValue(value) {
   return (value ?? '')
     .trim()
     .toLowerCase()
+}
+
+async function deleteHunt() {
+  if (!hunt.value || isDeleting.value) {
+    return
+  }
+
+  const confirmed = window.confirm(
+    `Delete "${hunt.value.name}"?\n\n` +
+    'The hunt, encounter pools, targets and phase history will be deleted.\n' +
+    'Shinies already added to My Shinies will NOT be deleted.'
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  isDeleting.value = true
+
+  try {
+    const response = await fetch(
+      `http://localhost:5119/api/hunts/${hunt.value.id}`,
+      {
+        method: 'DELETE'
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(
+        'Could not delete hunt'
+      )
+    }
+
+    router.push('/hunts')
+  } catch (error) {
+    console.error(error)
+
+    alert(
+      'Something went wrong while deleting the hunt.'
+    )
+  } finally {
+    isDeleting.value = false
+  }
 }
 
 function findDexEntry(
@@ -451,47 +495,74 @@ function formatDate(value) {
     </p>
 
     <template v-else-if="hunt">
-      <header class="hunt-header">
-        <div>
-          <RouterLink
-            to="/hunts"
-            class="back-link"
-          >
-            ← Back to Hunts
-          </RouterLink>
+<header class="hunt-header">
+  <div>
+    <RouterLink
+      to="/hunts"
+      class="back-link"
+    >
+      ← Back to Hunts
+    </RouterLink>
 
-          <div class="title-row">
-            <h1>
-              {{ hunt.name }}
-            </h1>
+    <div class="title-row">
+      <h1>
+        {{ hunt.name }}
+      </h1>
 
-            <span
-              class="status"
-              :class="{
-                completed:
-                  hunt.status ===
-                  'Completed'
-              }"
-            >
-              {{
-                hunt.status ===
-                'Completed'
-                  ? 'Hunt Completed'
-                  : 'Active'
-              }}
-            </span>
-          </div>
+      <span
+        class="status"
+        :class="{
+          completed:
+            hunt.status ===
+            'Completed'
+        }"
+      >
+        {{
+          hunt.status ===
+          'Completed'
+            ? 'Hunt Completed'
+            : 'Active'
+        }}
+      </span>
+    </div>
 
-          <p class="started">
-            Started
-            {{
-              formatDate(
-                hunt.startedAt
-              )
-            }}
-          </p>
-        </div>
-      </header>
+    <p class="started">
+      Started
+      {{
+        formatDate(
+          hunt.startedAt
+        )
+      }}
+    </p>
+  </div>
+
+<div class="header-actions">
+  <button
+    type="button"
+    class="edit-hunt-button"
+    @click="
+      router.push(
+        `/hunts/${hunt.id}/edit`
+      )
+    "
+  >
+    Edit Hunt
+  </button>
+
+  <button
+    type="button"
+    class="delete-hunt-button"
+    :disabled="isDeleting"
+    @click="deleteHunt"
+  >
+    {{
+      isDeleting
+        ? 'Deleting...'
+        : 'Delete Hunt'
+    }}
+  </button>
+</div>
+</header>
 
       <!-- CURRENT HUNT -->
       <section
@@ -987,6 +1058,11 @@ function formatDate(value) {
 }
 
 .hunt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+
   margin-bottom: 30px;
 }
 
@@ -1474,6 +1550,15 @@ function formatDate(value) {
       30px 16px;
   }
 
+  .hunt-header {
+  flex-direction: column;
+}
+
+.delete-hunt-button {
+  width: 100%;
+}
+
+
   .title-row {
     align-items: flex-start;
     flex-direction: column;
@@ -1509,5 +1594,57 @@ function formatDate(value) {
   .game-header {
     align-items: flex-start;
   }
+
+  .delete-hunt-button {
+  padding: 10px 16px;
+
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+
+  background: #fee2e2;
+  color: #991b1b;
+
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.delete-hunt-button:hover {
+  background: #fecaca;
+}
+
+.delete-hunt-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-hunt-button {
+  padding: 10px 16px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+
+  background: white;
+  color: #374151;
+
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 650px) {
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .edit-hunt-button,
+  .delete-hunt-button {
+    width: 100%;
+  }
+}
 }
 </style>

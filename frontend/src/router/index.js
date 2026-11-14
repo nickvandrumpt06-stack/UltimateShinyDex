@@ -13,6 +13,7 @@ import DexSettingsView from '../views/DexSettingsView.vue'
 import HuntsView from '../views/HuntsView.vue'
 import HuntDetailView from '../views/HuntDetailView.vue'
 
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
 
@@ -87,6 +88,13 @@ const router = createRouter({
   path: '/hunts/:id',
   name: 'hunt-detail',
   component: HuntDetailView
+},
+
+{
+  path: '/hunts/:id/edit',
+  name: 'edit-hunt',
+  component: () =>
+    import('../views/EditHuntView.vue')
 },
   ]
 })
